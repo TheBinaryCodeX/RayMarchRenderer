@@ -26,6 +26,11 @@ uniform float tempFact2;
 
 uniform sampler2D lightmap;
 
+struct Shader
+{
+
+};
+
 struct Material
 {
 	vec3 color;
