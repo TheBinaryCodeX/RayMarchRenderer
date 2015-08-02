@@ -26,11 +26,6 @@ uniform float tempFact2;
 
 uniform sampler2D lightmap;
 
-struct Shader
-{
-
-};
-
 struct Material
 {
 	vec3 color;
@@ -73,6 +68,14 @@ struct MapData
 		material = mat;
 		t = T;
 	}
+};
+
+struct RayData
+{
+	vec3 origin;
+	vec3 hit;
+	vec3 dir;
+	float t;
 };
 
 highp float rand(vec2 co)
@@ -148,6 +151,7 @@ float mapBox(vec3 p, vec3 centre, vec3 radius)
 	return min(max(q.x, max(q.y, q.z)), 0) + length(max(q, 0));
 }
 
+/*
 float mapTorus(vec3 p, vec3 centre, vec3 normal, vec2 radius)
 {
 	vec3 q = p - centre;
@@ -169,6 +173,7 @@ float mapTorus(vec3 p, vec3 centre, vec3 normal, vec2 radius)
 	vec2 q2 = vec2(length(vec2(dot(q, locX), dot(q, locZ))) - radius.x, dot(q, locY));
 	return length(q2) - radius.y;
 }
+*/
 
 MapData opU(MapData a, MapData b)
 {
@@ -211,6 +216,7 @@ MapData march(vec3 origin, vec3 dir)
 	return MapData(Material(skyColor(dir), false, false, true, 1, 1, 1, 1, 1), maxDist);
 }
 
+/*
 MapData marchT(vec3 origin, vec3 dir)
 {
 	float t = 0;
@@ -236,6 +242,7 @@ MapData marchT(vec3 origin, vec3 dir)
 
 	return MapData(Material(skyColor(dir), false, false, true, 1, 1, 1, 1, 1), maxDist);
 }
+*/
 
 vec3 getNormal(vec3 p)
 {
@@ -248,10 +255,10 @@ vec3 getNormal(vec3 p)
 	return normalize(n);
 }
 
-vec3 calculateDir(vec4 randCoords, vec3 dir, vec3 normal, float rRoughness, float tRoughness, float eta, bool flipZ)
+vec3 randHemisphere(vec2 randSeed1, vec2 randSeed2, vec3 dir, vec3 normal)
 {
-	float theta = 2 * 3.141592653 * rand(randCoords.xy);
-	float phi = acos(2 * rand(randCoords.zw) - 1);
+	float theta = 2 * 3.141592653 * rand(randSeed1);
+	float phi = acos(2 * rand(randSeed2) - 1);
 
 	vec3 bDir = normalize(vec3(sin(phi) * cos(theta), cos(phi), sin(phi) * sin(theta)));
 
@@ -261,10 +268,6 @@ vec3 calculateDir(vec4 randCoords, vec3 dir, vec3 normal, float rRoughness, floa
 	}
 
 	vec3 locZ = normal;
-	if (flipZ)
-	{
-		locZ *= -1;
-	}
 
 	vec3 locX;
 	if (locZ == vec3(0, 1, 0))
@@ -282,155 +285,78 @@ vec3 calculateDir(vec4 randCoords, vec3 dir, vec3 normal, float rRoughness, floa
 
 	bDir = m * bDir;
 
-	if (rRoughness != 1.0)
-	{
-		bDir = mix(bDir, reflect(dir, normal), 1.0 - clamp(rRoughness, 0.0, 1.0));
-	}
-
-	if (eta != 0.0)
-	{
-		bDir = mix(bDir, refract(dir, normal, eta), 1.0 - clamp(tRoughness, 0.0, 1.0));
-	}
-
 	return bDir;
+}
+
+// Shader Functions
+void shader_diffuse(in RayData ray, in vec3 inColor, out vec3 outColor, out vec3 outDir)
+{
+	// Color
+	outColor = inColor;
+
+	// Direction
+	vec2 rs1 = ray.hit.xy + vec2(time);
+	vec2 rs2 = ray.hit.zx + vec2(time);
+	outDir = randHemisphere(rs1, rs2, ray.dir, getNormal(ray.hit));
+}
+
+void shader_glossy(in RayData ray, in vec3 inColor, in float inRoughness, out vec3 outColor, out vec3 outDir)
+{
+	// Color
+	outColor = inColor;
+
+	// Direction
+	vec2 rs1 = ray.hit.xy + vec2(time);
+	vec2 rs2 = ray.hit.zx + vec2(time);
+	outDir = mix(randHemisphere(rs1, rs2, ray.dir, getNormal(ray.hit)), reflect(ray.dir, getNormal(ray.hit)), 1.0 - inRoughness);
+}
+
+void shader_emission(in RayData ray, in vec3 inColor, in float inPower, out vec3 outColor)
+{
+	outColor = inColor * inPower;
 }
 
 vec3 trace(vec3 origin, vec3 dir)
 {
-	MapData v = march(origin, dir);
+	vec3 color = vec3(1, 1, 1);
 
-	vec3 color = v.material.color;
-	bool reflective = v.material.reflective;
-	bool transmissive = v.material.transmissive;
-	bool emissive = v.material.emissive;
-	float rRoughness = v.material.rRoughness;
-	float tRoughness = v.material.tRoughness;
-	float ior = v.material.ior;
-	float mixFact = v.material.mixFact;
-	float t = v.t;
+	vec3 o = origin;
+	vec3 d = dir;
 
-	if (t < maxDist && !emissive)
+	int bounces = 0;
+	while (bounces < 512)
 	{
-		vec3 point = origin + t * dir;
-		vec3 normal = getNormal(point);
-		point += normal * 0.001;
+		bounces++;
 
-		vec3 diff = color;
+		MapData v = march(o, d);
 
-		vec3 point2 = point;
-		vec3 normal2 = normal;
-		vec3 dir2 = dir;
+		RayData ray;
+		ray.origin = o;
+		ray.dir = d;
+		ray.t = v.t;
+		ray.hit = o + v.t * d;
 
-		int bounces = 0;
-		while (bounces < 512)
+		if (ray.t < maxDist && !v.material.emissive)
 		{
-			bounces++;
+			vec3 diffDir;
+			vec3 diff;
+			shader_diffuse(ray, v.material.color, diff, diffDir);
 
-			vec2 s1 = (point2.xy * point2.yz) + vec2(time / 100);
-			vec2 s2 = (point2.xy * point2.yz) + vec2(-time / 100);
+			color *= diff;
 
-			vec3 bDir;
-
-			if (mixFact == -1)
-			{
-				mixFact = 1.0 - pow(1.0 - dot(-dir2, normal2), 1.0);
-			}
-
-			if (reflective)
-			{
-				float r = rand((point2.yx * point2.zy) + vec2(time / 50));
-				if (r <= mixFact)
-				{
-					bDir = calculateDir(vec4(s1, s2), dir2, normal2, 1.0, 1.0, 0.0, false);
-				}
-				else
-				{
-					bDir = calculateDir(vec4(s1, s2), dir2, normal2, rRoughness, 1.0, 0.0, false);
-				}
-			}
-			else
-			{
-				bDir = calculateDir(vec4(s1, s2), dir2, normal2, 1.0, 1.0, 0.0, false);
-			}
-
-			if (transmissive)
-			{
-				if (reflective)
-				{
-					float r = rand((point2.yx * point2.zy) + vec2(time / 50));
-					if (r > mixFact)
-					{
-						bDir = calculateDir(vec4(s1, s2), dir2, normal2, rRoughness, 1.0, 0.0, false);
-					}
-					else
-					{
-						bDir = calculateDir(vec4(s1, s2), dir2, normal2, 1.0, tRoughness, 1.0 / ior, true);
-						MapData mdt = marchT(point2 - normal2 * 0.003, bDir);
-
-						point2 = point2 + mdt.t * bDir;
-						normal2 = getNormal(point2);
-						point2 += normal2 * 0.005;
-
-						bDir = calculateDir(vec4(s2, s1), bDir, -normal2, 1.0, tRoughness, ior, true);
-					}
-				}
-				else
-				{
-					bDir = calculateDir(vec4(s1, s2), dir2, normal2, 1.0, tRoughness, 1.0 / ior, true);
-					MapData mdt = marchT(point2 - normal2 * 0.003, bDir);
-
-					point2 = point2 + mdt.t * bDir;
-					normal2 = getNormal(point2);
-					point2 += normal2 * 0.005;
-
-					bDir = calculateDir(vec4(s1, s2), bDir, -normal2, 1.0, tRoughness, ior, true);
-				}
-			}
-
-			MapData md = march(point2, bDir);
-
-			if (md.material.emissive)
-			{
-				if (md.t >= maxDist)
-				{
-					diff *= clamp(md.material.color * md.material.power, 0.0, 1.0);
-				}
-				else
-				{
-					diff *= md.material.color * md.material.power * (1.0 / pow(md.t, 2));
-				}
-				break;
-			}
-			else
-			{
-				diff *= md.material.color * clamp((1.0 / pow(md.t, 2)), 0.0, 1.0);
-			}
-
-			point2 = point2 + md.t * bDir;
-			normal2 = getNormal(point2);
-			point2 += normal2 * 0.001;
-
-			dir2 = bDir;
-
-			color = md.material.color;
-			reflective = md.material.reflective;
-			transmissive = md.material.transmissive;
-			emissive = md.material.emissive;
-			rRoughness = md.material.rRoughness;
-			tRoughness = md.material.tRoughness;
-			ior = md.material.ior;
-			mixFact = md.material.mixFact;
+			o = ray.hit + getNormal(ray.hit) * 0.001;
+			d = diffDir;
 		}
-
-		color = diff;
+		else
+		{
+			vec3 emit;
+			shader_emission(ray, v.material.color, v.material.power, emit);
+			color *= emit;
+			break;
+		}
 	}
 
 	return color;
-}
-
-float clength(vec3 v)
-{
-	return (abs(v.r) + abs(v.g) + abs(v.b)) / 3;
 }
 
 void main()

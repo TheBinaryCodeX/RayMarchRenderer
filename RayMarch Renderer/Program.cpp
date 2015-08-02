@@ -153,7 +153,7 @@ int main()
 
 					currentSample++;
 					
-					std::cout << currentSample << "/" << samples << std::endl;
+					//std::cout << currentSample << "/" << samples << std::endl;
 				}
 				else
 				{
