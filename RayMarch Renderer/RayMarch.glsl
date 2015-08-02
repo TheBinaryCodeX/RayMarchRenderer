@@ -88,36 +88,9 @@ highp float rand(vec2 co)
 	return fract(sin(sn) * c);
 }
 
-float noise(in vec2 x)
-{
-	return sin(1.5*x.x)*sin(1.5*x.y);
-}
-
-float fbm4(vec2 p)
-{
-	float f = 0.0;
-	f += 0.5000*noise(p); p = m*p*2.02;
-	f += 0.2500*noise(p); p = m*p*2.03;
-	f += 0.1250*noise(p); p = m*p*2.01;
-	f += 0.0625*noise(p);
-	return f / 0.9375;
-}
-
-float fbm6(vec2 p)
-{
-	float f = 0.0;
-	f += 0.500000*(0.5 + 0.5*noise(p)); p = m*p*2.02;
-	f += 0.250000*(0.5 + 0.5*noise(p)); p = m*p*2.03;
-	f += 0.125000*(0.5 + 0.5*noise(p)); p = m*p*2.01;
-	f += 0.062500*(0.5 + 0.5*noise(p)); p = m*p*2.04;
-	f += 0.031250*(0.5 + 0.5*noise(p)); p = m*p*2.01;
-	f += 0.015625*(0.5 + 0.5*noise(p));
-	return f / 0.96875;
-}
-
 vec3 skyColor(vec3 dir)
 {
-	//return vec3(1);
+	return vec3(0.5);
 	//return vec3(0);
 	return vec3(0.015);
 
@@ -150,30 +123,6 @@ float mapBox(vec3 p, vec3 centre, vec3 radius)
 	vec3 q = abs(p - centre) - radius;
 	return min(max(q.x, max(q.y, q.z)), 0) + length(max(q, 0));
 }
-
-/*
-float mapTorus(vec3 p, vec3 centre, vec3 normal, vec2 radius)
-{
-	vec3 q = p - centre;
-
-	vec3 locY = normal;
-
-	vec3 locX;
-	if (locY == vec3(0, 0, 1))
-	{
-		locX = normalize(cross(locY, vec3(0, 1, 0)));
-	}
-	else
-	{
-		locX = normalize(cross(locY, vec3(0, 0, 1)));
-	}
-
-	vec3 locZ = normalize(cross(locY, locX));
-
-	vec2 q2 = vec2(length(vec2(dot(q, locX), dot(q, locZ))) - radius.x, dot(q, locY));
-	return length(q2) - radius.y;
-}
-*/
 
 MapData opU(MapData a, MapData b)
 {
@@ -215,34 +164,6 @@ MapData march(vec3 origin, vec3 dir)
 
 	return MapData(Material(skyColor(dir), false, false, true, 1, 1, 1, 1, 1), maxDist);
 }
-
-/*
-MapData marchT(vec3 origin, vec3 dir)
-{
-	float t = 0;
-
-	for (int i = 0; i < maxSteps; i++)
-	{
-		MapData d = map(origin + t * dir);
-		d.t *= -1;
-
-		if (d.t < 0.001)
-		{
-			d.t = t;
-			return d;
-		}
-
-		if (t >= maxDist)
-		{
-			return MapData(Material(skyColor(dir), false, false, true, 1, 1, 1, 1, 1), maxDist);
-		}
-
-		t += d.t;
-	}
-
-	return MapData(Material(skyColor(dir), false, false, true, 1, 1, 1, 1, 1), maxDist);
-}
-*/
 
 vec3 getNormal(vec3 p)
 {
@@ -373,23 +294,6 @@ void main()
 	vec3 dir = mix(mix(ray00, ray01, pos.x + 0.5 / size.x), mix(ray10, ray11, pos.x), pos.y + 0.5 / size.y);
 
 	vec3 color = trace(eye, normalize(dir));
-	//color = pow(color, vec3(0.4545));
-
-	/*
-	vec2 pos2 = pos + vec2(0.5, 0.5) / vec2(size.x, size.y);
-
-	vec3 dir1 = mix(mix(ray00, ray01, pos2.x - 0.25 / size.x), mix(ray10, ray11, pos.x), pos2.y - 0.25 / size.y);
-	vec3 dir2 = mix(mix(ray00, ray01, pos2.x + 0.25 / size.x), mix(ray10, ray11, pos.x), pos2.y - 0.25 / size.y);
-	vec3 dir3 = mix(mix(ray00, ray01, pos2.x - 0.25 / size.x), mix(ray10, ray11, pos.x), pos2.y + 0.25 / size.y);
-	vec3 dir4 = mix(mix(ray00, ray01, pos2.x + 0.25 / size.x), mix(ray10, ray11, pos.x), pos2.y + 0.25 / size.y);
-
-	vec3 color1 = trace(eye, normalize(dir1));
-	vec3 color2 = trace(eye, normalize(dir2));
-	vec3 color3 = trace(eye, normalize(dir3));
-	vec3 color4 = trace(eye, normalize(dir4));
-
-	color = (color1 + color2 + color3 + color4) / 4;
-	*/
 
 	vec4 old = imageLoad(framebuffer, pix);
 

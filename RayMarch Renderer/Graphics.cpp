@@ -197,7 +197,7 @@ void Graphics::Init()
 	matLines.push_back("Material m1 = Material(vec3(1.0, 0.1, 0.1), false, false, false, 0, 0.1, 1, 0, 1);");
 	matLines.push_back("Material m2 = Material(vec3(0.1, 0.1, 1.0), false, false, false, 0, 0.05, 1, 0, 0.2);");
 	matLines.push_back("Material m3 = Material(vec3(0.1, 1.0, 0.1), false, false, false, 0, 1, 1, 0, 1);");
-	matLines.push_back("Material m4 = Material(vec3(1.0, 1.0, 1.0), false, false, true, 2, 1, 1, 0, 1);");
+	matLines.push_back("Material m4 = Material(vec3(1.0, 1.0, 1.0), false, false, true, 4, 1, 1, 0, 1);");
 
 	objLines.push_back("d = opU(d, MapData(m0, mapBox(p, vec3(0, -1.025, 0), vec3(32, 0.05, 32))));");
 	objLines.push_back("d = opU(d, MapData(m1, mapSphere(p, vec3(-1, 0, 0), 1)));");
