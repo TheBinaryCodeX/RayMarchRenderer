@@ -227,8 +227,8 @@ void shader_glossy(in RayData ray, in vec3 inColor, in float inRoughness, out ve
 	outColor = inColor;
 
 	// Direction
-	vec2 rs1 = ray.hit.xy + vec2(time);
-	vec2 rs2 = ray.hit.zx + vec2(time);
+	vec2 rs1 = ray.hit.yx + vec2(time);
+	vec2 rs2 = ray.hit.xz + vec2(time);
 	outDir = mix(randHemisphere(rs1, rs2, ray.dir, getNormal(ray.hit)), reflect(ray.dir, getNormal(ray.hit)), 1.0 - inRoughness);
 }
 
@@ -261,7 +261,7 @@ vec3 trace(vec3 origin, vec3 dir)
 		{
 			vec3 diffDir;
 			vec3 diff;
-			shader_diffuse(ray, v.material.color, diff, diffDir);
+			shader_diffuse(ray, v.material.color, diff, diffDir)
 
 			color *= diff;
 
