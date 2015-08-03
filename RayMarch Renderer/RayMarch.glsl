@@ -261,12 +261,26 @@ vec3 trace(vec3 origin, vec3 dir)
 		{
 			vec3 diffDir;
 			vec3 diff;
-			shader_diffuse(ray, v.material.color, diff, diffDir)
+			shader_diffuse(ray, v.material.color, diff, diffDir);
 
-			color *= diff;
+			vec3 glossDir;
+			vec3 gloss;
+			shader_glossy(ray, vec3(0.8), 0.02, gloss, glossDir);
+
+			float f = pow(1.0 - dot(-d, getNormal(ray.hit)), 2);
+			float r = rand(ray.origin.zx + vec2(time, time));
+			if (r <= f)
+			{
+				color *= gloss;
+				d = glossDir;
+			}
+			else
+			{
+				color *= diff;
+				d = diffDir;
+			}
 
 			o = ray.hit + getNormal(ray.hit) * 0.001;
-			d = diffDir;
 		}
 		else
 		{
