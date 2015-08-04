@@ -149,7 +149,7 @@ GLuint Graphics::loadShader(GLenum type, std::string path)
 
 	const char* src = content.c_str();
 
-	std::cout << src << std::endl;
+	//std::cout << src << std::endl;
 
 	GLuint shader = glCreateShader(type);
 	glShaderSource(shader, 1, &src, NULL);
@@ -260,11 +260,11 @@ void Graphics::Init()
 	matLines.push_back("}");
 	*/
 
-	objLines.push_back("d = opU(d, MapData(1, mapBox(p, vec3(0, -1.025, 0), vec3(32, 0.05, 32))));");
-	objLines.push_back("d = opU(d, MapData(2, mapSphere(p, vec3(-1, 0, 0), 1)));");
-	objLines.push_back("d = opU(d, MapData(3, mapSphere(p, vec3(1, 0, 0), 1)));");
-	objLines.push_back("d = opU(d, MapData(4, mapBox(p, vec3(-4, 1, 0), vec3(0.05, 2, 2))));");
-	objLines.push_back("d = opU(d, MapData(0, mapSphere(p, vec3(8, 8, -4), 4)));");
+	objLines.push_back("d = opU(d, vec2(mapBox(p, vec3(0, -1.025, 0), vec3(32, 0.05, 32)), 1));");
+	objLines.push_back("d = opU(d, vec2(mapSphere(p, vec3(-1, 0, 0), 1), 2));");
+	objLines.push_back("d = opU(d, vec2(mapSphere(p, vec3(1, 0, 0), 1), 3));");
+	objLines.push_back("d = opU(d, vec2(mapBox(p, vec3(-4, 1, 0), vec3(0.05, 2, 2)), 4));");
+	objLines.push_back("d = opU(d, vec2(mapSphere(p, vec3(8, 8, -4), 4), 0));");
 
 	fullQuad.Create("FullQuad");
 	rayTrace.CreateCompute("RayMarch");

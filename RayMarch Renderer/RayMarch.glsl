@@ -24,68 +24,6 @@ uniform float time;
 uniform float tempFact;
 uniform float tempFact2;
 
-uniform sampler2D lightmap;
-
-/*
-Inputs:
-If w is 0: x is a reference to an inout variable
-If w is 1-3: the input is the first 1-3 numbers
-
-Outputs:
-xyz is the output itself, w is the inout variable to output to.
-*/
-struct Node
-{
-	int nodeID;
-	vec4 inputs[8];
-	vec4 outputs[8];
-
-	int depth;
-};
-
-struct Material
-{
-	vec3 color;
-
-	bool reflective;
-	bool transmissive;
-	bool emissive;
-
-	float power;
-
-	float rRoughness;
-	float tRoughness;
-
-	float ior;
-
-	float mixFact;
-
-	void Material(vec3 col, bool refl, bool trans, bool emit, float pow, float rRough, float tRough, float IOR, float mixFactor)
-	{
-		color = color;
-		reflective = refl;
-		transmissive = trans;
-		emissive = emit;
-		power = pow;
-		rRoughness = rRough;
-		tRoughness = tRough;
-		ior = IOR;
-		mixFact = mixFactor;
-	}
-};
-
-struct MapData
-{
-	int matID;
-	float t;
-
-	void MapData(int mat, float T)
-	{
-		matID = mat;
-		t = T;
-	}
-};
-
 struct RayData
 {
 	vec3 origin;
@@ -140,14 +78,14 @@ float mapBox(vec3 p, vec3 centre, vec3 radius)
 	return min(max(q.x, max(q.y, q.z)), 0) + length(max(q, 0));
 }
 
-MapData opU(MapData a, MapData b)
+vec2 opU(vec2 a, vec2 b)
 {
-	return a.t < b.t ? a : b;
+	return a.x < b.x ? a : b;
 }
 
-MapData map(vec3 p)
+vec2 map(vec3 p)
 {
-	MapData d = MapData(-1, maxDist);
+	vec2 d = vec2(maxDist, -1);
 
 	//#MATINSERT
 
@@ -156,38 +94,38 @@ MapData map(vec3 p)
 	return d;
 }
 
-MapData march(vec3 origin, vec3 dir)
+vec2 march(vec3 origin, vec3 dir)
 {
 	float t = 0;
 
 	for (int i = 0; i < maxSteps; i++)
 	{
-		MapData d = map(origin + t * dir);
+		vec2 d = map(origin + t * dir);
 
-		if (d.t < 0.001)
+		if (d.x < 0.001)
 		{
-			d.t = t;
+			d.x = t;
 			return d;
 		}
 
 		if (t >= maxDist)
 		{
-			return MapData(0, maxDist);
+			return vec2(maxDist, -1);
 		}
 
-		t += d.t;
+		t += d.x;
 	}
 
-	return MapData(0, maxDist);
+	return vec2(maxDist, -1);
 }
 
 vec3 getNormal(vec3 p)
 {
 	vec3 n;
 
-	n.x = map(p + vec3(0.001, 0, 0)).t - map(p - vec3(0.001, 0, 0)).t;
-	n.y = map(p + vec3(0, 0.001, 0)).t - map(p - vec3(0, 0.001, 0)).t;
-	n.z = map(p + vec3(0, 0, 0.001)).t - map(p - vec3(0, 0, 0.001)).t;
+	n.x = map(p + vec3(0.001, 0, 0)).x - map(p - vec3(0.001, 0, 0)).x;
+	n.y = map(p + vec3(0, 0.001, 0)).x - map(p - vec3(0, 0.001, 0)).x;
+	n.z = map(p + vec3(0, 0, 0.001)).x - map(p - vec3(0, 0, 0.001)).x;
 
 	return normalize(n);
 }
@@ -268,16 +206,6 @@ void shader_emission(in RayData ray, in vec3 inColor, in float inPower, out vec3
 	outColor = inColor * inPower;
 }
 
-int getHeighestDepth(Node nodes[3])
-{
-	int d = 0;
-	for (int i = 0; i < 3; i++)
-	{
-		d = max(d, nodes[i].depth);
-	}
-	return d;
-}
-
 //#MATFUNCINSERT
 
 vec3 trace(vec3 origin, vec3 dir)
@@ -292,20 +220,20 @@ vec3 trace(vec3 origin, vec3 dir)
 	{
 		bounces++;
 
-		MapData v = march(o, d);
+		vec2 v = march(o, d);
 
 		RayData ray;
 		ray.origin = o;
 		ray.dir = d;
-		ray.t = v.t;
-		ray.hit = o + v.t * d;
+		ray.t = v.x;
+		ray.hit = o + v.x * d;
 
 		if (ray.t < maxDist)
 		{
 			vec3 newColor;
 			vec3 newDir;
 
-			switch (v.matID)
+			switch (int(v.y))
 			{
 			//#CASEINSERT
 			}
