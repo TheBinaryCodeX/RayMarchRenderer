@@ -26,6 +26,23 @@ uniform float tempFact2;
 
 uniform sampler2D lightmap;
 
+/*
+Inputs:
+If w is 0: x is a reference to an inout variable
+If w is 1-3: the input is the first 1-3 numbers
+
+Outputs:
+xyz is the output itself, w is the inout variable to output to.
+*/
+struct Node
+{
+	int nodeID;
+	vec4 inputs[8];
+	vec4 outputs[8];
+
+	int depth;
+};
+
 struct Material
 {
 	vec3 color;
@@ -90,7 +107,7 @@ highp float rand(vec2 co)
 
 vec3 skyColor(vec3 dir)
 {
-	return vec3(0.5);
+	//return vec3(0.5);
 	//return vec3(0);
 	return vec3(0.015);
 
@@ -210,6 +227,21 @@ vec3 randHemisphere(vec2 randSeed1, vec2 randSeed2, vec3 dir, vec3 normal)
 }
 
 // Shader Functions
+void shader_mix(in RayData ray, in vec3 inColor1, in vec3 inDir1, in vec3 inColor2, in vec3 inDir2, in float inFactor, out vec3 outColor, out vec3 outDir)
+{
+	float r = rand(ray.origin.zx + vec2(time));
+	if (r < inFactor)
+	{
+		outColor = inColor2;
+		outDir = inDir2;
+	}
+	else
+	{
+		outColor = inColor1;
+		outDir = inDir1;
+	}
+}
+
 void shader_diffuse(in RayData ray, in vec3 inColor, out vec3 outColor, out vec3 outDir)
 {
 	// Color
@@ -237,6 +269,35 @@ void shader_emission(in RayData ray, in vec3 inColor, in float inPower, out vec3
 	outColor = inColor * inPower;
 }
 
+int getHeighestDepth(Node nodes[3])
+{
+	int d = 0;
+	for (int i = 0; i < 3; i++)
+	{
+		d = max(d, nodes[i].depth);
+	}
+	return d;
+}
+
+//#MATFUNCINSERT
+void mat_func_0(in RayData ray, out vec3 outColor, out vec3 outDir)
+{
+	vec3 diffDir;
+	vec3 diff;
+	shader_diffuse(ray, vec3(0.8, 0.1, 0.1), diff, diffDir);
+
+	vec3 glossDir;
+	vec3 gloss;
+	shader_glossy(ray, vec3(0.8), 0.1, gloss, glossDir);
+
+	vec3 mixedDir;
+	vec3 mixedColor;
+	shader_mix(ray, diff, diffDir, gloss, glossDir, 0.5, mixedColor, mixedDir);
+
+	outColor = mixedColor;
+	outDir = mixedDir;
+}
+
 vec3 trace(vec3 origin, vec3 dir)
 {
 	vec3 color = vec3(1, 1, 1);
@@ -259,28 +320,136 @@ vec3 trace(vec3 origin, vec3 dir)
 
 		if (ray.t < maxDist && !v.material.emissive)
 		{
+			/*
+			Node nodes[3];
+
+			Node n0;
+			n0.nodeID = 0;
+			n0.inputs[0] = vec4(0, 0, 0, 0);
+			n0.inputs[1] = vec4(1, 0, 0, 0);
+			n0.inputs[2] = vec4(2, 0, 0, 0);
+			n0.inputs[3] = vec4(3, 0, 0, 0);
+			n0.inputs[4] = vec4(0.5, 0, 0, 1);
+			n0.outputs[0] = vec4(0, 0, 0, 4);
+			n0.outputs[1] = vec4(0, 0, 0, 5);
+			n0.depth = 1;
+			nodes[0] = n0;
+
+			Node n1;
+			n1.nodeID = 1;
+			n1.inputs[0] = vec4(v.material.color, 3);
+			n1.outputs[0] = vec4(0, 0, 0, 0);
+			n1.outputs[1] = vec4(0, 0, 0, 1);
+			n1.depth = 2;
+			nodes[1] = n1;
+
+			Node n2;
+			n2.nodeID = 2;
+			n2.inputs[0] = vec4(0.8, 0.8, 0.8, 3);
+			n2.inputs[1] = vec4(0.02, 0, 0, 1);
+			n2.outputs[0] = vec4(0, 0, 0, 2);
+			n2.outputs[1] = vec4(0, 0, 0, 3);
+			n2.depth = 2;
+			nodes[2] = n2;
+
+			vec3 inouts[8];
+
+			int depth = getHeighestDepth(nodes);
+			while (depth > 0)
+			{
+				for (int i = 0; i < 3; i++)
+				{
+					Node n = nodes[i];
+					if (n.depth == depth)
+					{
+						if (n.nodeID == 0)
+						{
+							vec3 inputs[5];
+							for (int i = 0; i < 5; i++)
+							{
+								if (n.inputs[i].w == 0)
+								{
+									inputs[i] = inouts[int(n.inputs[i].x)];
+								}
+								else
+								{
+									inputs[i] = n.inputs[i].xyz;
+								}
+							}
+							shader_mix(ray, inputs[0], inputs[1], inputs[2], inputs[3], inputs[4].x, inouts[int(n.outputs[0].w)], inouts[int(n.outputs[1].w)]);
+						}
+						else if (n.nodeID == 1)
+						{
+							vec3 input;
+							if (n.inputs[0].w == 0)
+							{
+								input = inouts[int(n.inputs[0].x)];
+							}
+							else
+							{
+								input = n.inputs[0].xyz;
+							}
+							shader_diffuse(ray, input, inouts[int(n.outputs[0].w)], inouts[int(n.outputs[1].w)]);
+						}
+						else if (n.nodeID == 2)
+						{
+							vec3 input;
+							if (n.inputs[0].w == 0)
+							{
+								input = inouts[int(n.inputs[0].x)];
+							}
+							else
+							{
+								input = n.inputs[0].xyz;
+							}
+							vec3 input2;
+							if (n.inputs[1].w == 0)
+							{
+								input2 = inouts[int(n.inputs[1].x)];
+							}
+							else
+							{
+								input2 = n.inputs[1].xyz;
+							}
+							shader_glossy(ray, input, input2.x, inouts[int(n.outputs[0].w)], inouts[int(n.outputs[1].w)]);
+						}
+						else if (n.nodeID == 3)
+						{
+
+						}
+					}
+				}
+				depth--;
+			}
+			color *= inouts[4];
+			d = inouts[5];
+
+			o = ray.hit + getNormal(ray.hit) * 0.001;
+			*/
+			/*
 			vec3 diffDir;
 			vec3 diff;
 			shader_diffuse(ray, v.material.color, diff, diffDir);
 
 			vec3 glossDir;
 			vec3 gloss;
-			shader_glossy(ray, vec3(0.8), 0.02, gloss, glossDir);
+			shader_glossy(ray, vec3(0.8), 0.1, gloss, glossDir);
 
-			float f = pow(1.0 - dot(-d, getNormal(ray.hit)), 2);
-			float r = rand(ray.origin.zx + vec2(time, time));
-			if (r <= f)
-			{
-				color *= gloss;
-				d = glossDir;
-			}
-			else
-			{
-				color *= diff;
-				d = diffDir;
-			}
+			vec3 mixedDir;
+			vec3 mixedColor;
+			shader_mix(ray, diff, diffDir, gloss, glossDir, 0.5, mixedColor, mixedDir);
+
+			color *= mixedColor;
 
 			o = ray.hit + getNormal(ray.hit) * 0.001;
+			d = mixedDir;
+			*/
+			vec3 outColor;
+			vec3 outDir;
+			mat_func_0(ray, outColor, outDir);
+			color *= outColor;
+			d = outDir;
+			o = ray.hit + getNormal(ray.hit) * 0.001;;
 		}
 		else
 		{
