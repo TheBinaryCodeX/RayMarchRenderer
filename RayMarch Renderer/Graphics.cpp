@@ -63,10 +63,30 @@ GLuint Graphics::loadShader(GLenum type, std::string path)
 				lines.insert(lines.begin() + i, first, last);
 			}
 		}
-		else if (line.find("//#MATINSERT") != std::string::npos)
+		else if (line.find("//#MATFUNCINSERT") != std::string::npos)
 		{
 			lines.erase(lines.begin() + i);
 			lines.insert(lines.begin() + i, matLines.begin(), matLines.end());
+		}
+		else if (line.find("//#CASEINSERT") != std::string::npos)
+		{
+			lines.erase(lines.begin() + i);
+
+			int matNum = 0;
+			for (int j = 0; j < matLines.size(); j++)
+			{
+				if (matLines[j] == "}")
+				{
+					matNum++;
+				}
+			}
+
+			for (int j = matNum - 1; j >= 0; j--)
+			{
+				lines.insert(lines.begin() + i, std::string("				break;"));
+				lines.insert(lines.begin() + i, std::string("				mat_func_") + std::to_string(j) + "(ray, newColor, newDir);");
+				lines.insert(lines.begin() + i, std::string("			case ") + std::to_string(j) + ":");
+			}
 		}
 		else if (line.find("//#OBJINSERT") != std::string::npos)
 		{
@@ -129,7 +149,7 @@ GLuint Graphics::loadShader(GLenum type, std::string path)
 
 	const char* src = content.c_str();
 
-	//std::cout << src << std::endl;
+	std::cout << src << std::endl;
 
 	GLuint shader = glCreateShader(type);
 	glShaderSource(shader, 1, &src, NULL);
@@ -193,17 +213,58 @@ void Graphics::Init()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	/*
 	matLines.push_back("Material m0 = Material(vec3(0.5, 0.5, 0.5), false, false, false, 0, 0.6, 1, 0, 1);");
 	matLines.push_back("Material m1 = Material(vec3(1.0, 0.1, 0.1), false, false, false, 0, 0.1, 1, 0, 1);");
 	matLines.push_back("Material m2 = Material(vec3(0.1, 0.1, 1.0), false, false, false, 0, 0.05, 1, 0, 0.2);");
 	matLines.push_back("Material m3 = Material(vec3(0.1, 1.0, 0.1), false, false, false, 0, 1, 1, 0, 1);");
 	matLines.push_back("Material m4 = Material(vec3(1.0, 1.0, 1.0), false, false, true, 4, 1, 1, 0, 1);");
+	*/
+	matLines.push_back("void mat_func_0(in RayData ray, out vec3 outColor, out vec3 outDir)");
+	matLines.push_back("{");
+	matLines.push_back("	shader_emission(ray, vec3(1, 1, 1), 8, outColor);");
+	matLines.push_back("	outDir = vec3(0, 0, 0);");
+	matLines.push_back("}");
 
-	objLines.push_back("d = opU(d, MapData(m0, mapBox(p, vec3(0, -1.025, 0), vec3(32, 0.05, 32))));");
-	objLines.push_back("d = opU(d, MapData(m1, mapSphere(p, vec3(-1, 0, 0), 1)));");
-	objLines.push_back("d = opU(d, MapData(m2, mapSphere(p, vec3(1, 0, 0), 1)));");
-	objLines.push_back("d = opU(d, MapData(m3, mapBox(p, vec3(-4, 1, 0), vec3(0.05, 2, 2))));");
-	objLines.push_back("d = opU(d, MapData(m4, mapSphere(p, vec3(8, 8, -4), 4)));");
+	matLines.push_back("void mat_func_1(in RayData ray, out vec3 outColor, out vec3 outDir)");
+	matLines.push_back("{");
+	matLines.push_back("	shader_diffuse(ray, vec3(0.5, 0.5, 0.5), outColor, outDir);");
+	matLines.push_back("}");
+
+	matLines.push_back("void mat_func_2(in RayData ray, out vec3 outColor, out vec3 outDir)");
+	matLines.push_back("{");
+	matLines.push_back("	shader_diffuse(ray, vec3(0.8, 0.1, 0.1), outColor, outDir);");
+	matLines.push_back("}");
+
+	matLines.push_back("void mat_func_3(in RayData ray, out vec3 outColor, out vec3 outDir)");
+	matLines.push_back("{");
+	matLines.push_back("	shader_diffuse(ray, vec3(0.1, 0.1, 0.8), outColor, outDir);");
+	matLines.push_back("}");
+
+	matLines.push_back("void mat_func_4(in RayData ray, out vec3 outColor, out vec3 outDir)");
+	matLines.push_back("{");
+	matLines.push_back("	shader_diffuse(ray, vec3(0.1, 0.8, 0.1), outColor, outDir);");
+	matLines.push_back("}");
+
+	/*
+	matLines.push_back("void mat_func_1(in RayData ray, out vec3 outColor, out vec3 outDir)");
+	matLines.push_back("{");
+	matLines.push_back("	vec3 diffDir, diff;");
+	matLines.push_back("	shader_diffuse(ray, vec3(0.8, 0.1, 0.1), diff, diffDir);");
+	matLines.push_back("	vec3 glossDir, gloss;");
+	matLines.push_back("	shader_glossy(ray, vec3(0.8), 0.1, gloss, glossDir);");
+	matLines.push_back("	vec3 mixedDir, mixedColor;");
+	matLines.push_back("	shader_mix(ray, diff, diffDir, gloss, glossDir, 0.5, mixedColor, mixedDir);");
+	matLines.push_back("	outColor = mixedColor;");
+	matLines.push_back("	outDir = mixedDir;");
+	matLines.push_back("}");
+	*/
+
+	objLines.push_back("d = opU(d, MapData(1, mapBox(p, vec3(0, -1.025, 0), vec3(32, 0.05, 32))));");
+	objLines.push_back("d = opU(d, MapData(2, mapSphere(p, vec3(-1, 0, 0), 1)));");
+	objLines.push_back("d = opU(d, MapData(3, mapSphere(p, vec3(1, 0, 0), 1)));");
+	objLines.push_back("d = opU(d, MapData(4, mapBox(p, vec3(-4, 1, 0), vec3(0.05, 2, 2))));");
+	objLines.push_back("d = opU(d, MapData(0, mapSphere(p, vec3(8, 8, -4), 4)));");
 
 	fullQuad.Create("FullQuad");
 	rayTrace.CreateCompute("RayMarch");

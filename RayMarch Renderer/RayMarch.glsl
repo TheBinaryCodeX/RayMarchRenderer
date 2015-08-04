@@ -76,13 +76,12 @@ struct Material
 
 struct MapData
 {
-	Material material;
-
+	int matID;
 	float t;
 
-	void MapData(Material mat, float T)
+	void MapData(int mat, float T)
 	{
-		material = mat;
+		matID = mat;
 		t = T;
 	}
 };
@@ -148,7 +147,7 @@ MapData opU(MapData a, MapData b)
 
 MapData map(vec3 p)
 {
-	MapData d = MapData(Material(vec3(-1, -1, -1), false, false, false, -1, -1, -1, -1, -1), maxDist);
+	MapData d = MapData(-1, maxDist);
 
 	//#MATINSERT
 
@@ -173,13 +172,13 @@ MapData march(vec3 origin, vec3 dir)
 
 		if (t >= maxDist)
 		{
-			return MapData(Material(skyColor(dir), false, false, true, 1, 1, 1, 1, 1), maxDist);
+			return MapData(0, maxDist);
 		}
 
 		t += d.t;
 	}
 
-	return MapData(Material(skyColor(dir), false, false, true, 1, 1, 1, 1, 1), maxDist);
+	return MapData(0, maxDist);
 }
 
 vec3 getNormal(vec3 p)
@@ -280,23 +279,6 @@ int getHeighestDepth(Node nodes[3])
 }
 
 //#MATFUNCINSERT
-void mat_func_0(in RayData ray, out vec3 outColor, out vec3 outDir)
-{
-	vec3 diffDir;
-	vec3 diff;
-	shader_diffuse(ray, vec3(0.8, 0.1, 0.1), diff, diffDir);
-
-	vec3 glossDir;
-	vec3 gloss;
-	shader_glossy(ray, vec3(0.8), 0.1, gloss, glossDir);
-
-	vec3 mixedDir;
-	vec3 mixedColor;
-	shader_mix(ray, diff, diffDir, gloss, glossDir, 0.5, mixedColor, mixedDir);
-
-	outColor = mixedColor;
-	outDir = mixedDir;
-}
 
 vec3 trace(vec3 origin, vec3 dir)
 {
@@ -318,143 +300,32 @@ vec3 trace(vec3 origin, vec3 dir)
 		ray.t = v.t;
 		ray.hit = o + v.t * d;
 
-		if (ray.t < maxDist && !v.material.emissive)
+		if (ray.t < maxDist)
 		{
-			/*
-			Node nodes[3];
+			vec3 newColor;
+			vec3 newDir;
 
-			Node n0;
-			n0.nodeID = 0;
-			n0.inputs[0] = vec4(0, 0, 0, 0);
-			n0.inputs[1] = vec4(1, 0, 0, 0);
-			n0.inputs[2] = vec4(2, 0, 0, 0);
-			n0.inputs[3] = vec4(3, 0, 0, 0);
-			n0.inputs[4] = vec4(0.5, 0, 0, 1);
-			n0.outputs[0] = vec4(0, 0, 0, 4);
-			n0.outputs[1] = vec4(0, 0, 0, 5);
-			n0.depth = 1;
-			nodes[0] = n0;
-
-			Node n1;
-			n1.nodeID = 1;
-			n1.inputs[0] = vec4(v.material.color, 3);
-			n1.outputs[0] = vec4(0, 0, 0, 0);
-			n1.outputs[1] = vec4(0, 0, 0, 1);
-			n1.depth = 2;
-			nodes[1] = n1;
-
-			Node n2;
-			n2.nodeID = 2;
-			n2.inputs[0] = vec4(0.8, 0.8, 0.8, 3);
-			n2.inputs[1] = vec4(0.02, 0, 0, 1);
-			n2.outputs[0] = vec4(0, 0, 0, 2);
-			n2.outputs[1] = vec4(0, 0, 0, 3);
-			n2.depth = 2;
-			nodes[2] = n2;
-
-			vec3 inouts[8];
-
-			int depth = getHeighestDepth(nodes);
-			while (depth > 0)
+			switch (v.matID)
 			{
-				for (int i = 0; i < 3; i++)
-				{
-					Node n = nodes[i];
-					if (n.depth == depth)
-					{
-						if (n.nodeID == 0)
-						{
-							vec3 inputs[5];
-							for (int i = 0; i < 5; i++)
-							{
-								if (n.inputs[i].w == 0)
-								{
-									inputs[i] = inouts[int(n.inputs[i].x)];
-								}
-								else
-								{
-									inputs[i] = n.inputs[i].xyz;
-								}
-							}
-							shader_mix(ray, inputs[0], inputs[1], inputs[2], inputs[3], inputs[4].x, inouts[int(n.outputs[0].w)], inouts[int(n.outputs[1].w)]);
-						}
-						else if (n.nodeID == 1)
-						{
-							vec3 input;
-							if (n.inputs[0].w == 0)
-							{
-								input = inouts[int(n.inputs[0].x)];
-							}
-							else
-							{
-								input = n.inputs[0].xyz;
-							}
-							shader_diffuse(ray, input, inouts[int(n.outputs[0].w)], inouts[int(n.outputs[1].w)]);
-						}
-						else if (n.nodeID == 2)
-						{
-							vec3 input;
-							if (n.inputs[0].w == 0)
-							{
-								input = inouts[int(n.inputs[0].x)];
-							}
-							else
-							{
-								input = n.inputs[0].xyz;
-							}
-							vec3 input2;
-							if (n.inputs[1].w == 0)
-							{
-								input2 = inouts[int(n.inputs[1].x)];
-							}
-							else
-							{
-								input2 = n.inputs[1].xyz;
-							}
-							shader_glossy(ray, input, input2.x, inouts[int(n.outputs[0].w)], inouts[int(n.outputs[1].w)]);
-						}
-						else if (n.nodeID == 3)
-						{
-
-						}
-					}
-				}
-				depth--;
+			//#CASEINSERT
 			}
-			color *= inouts[4];
-			d = inouts[5];
+			
+			color *= newColor;
 
-			o = ray.hit + getNormal(ray.hit) * 0.001;
-			*/
-			/*
-			vec3 diffDir;
-			vec3 diff;
-			shader_diffuse(ray, v.material.color, diff, diffDir);
-
-			vec3 glossDir;
-			vec3 gloss;
-			shader_glossy(ray, vec3(0.8), 0.1, gloss, glossDir);
-
-			vec3 mixedDir;
-			vec3 mixedColor;
-			shader_mix(ray, diff, diffDir, gloss, glossDir, 0.5, mixedColor, mixedDir);
-
-			color *= mixedColor;
-
-			o = ray.hit + getNormal(ray.hit) * 0.001;
-			d = mixedDir;
-			*/
-			vec3 outColor;
-			vec3 outDir;
-			mat_func_0(ray, outColor, outDir);
-			color *= outColor;
-			d = outDir;
-			o = ray.hit + getNormal(ray.hit) * 0.001;;
+			if (newDir == vec3(0, 0, 0))
+			{
+				break;
+			}
+			else
+			{
+				d = newDir;
+				o = ray.hit + getNormal(ray.hit) * 0.001;
+			}
 		}
 		else
 		{
 			vec3 emit;
-			shader_emission(ray, v.material.color, v.material.power, emit);
+			shader_emission(ray, skyColor(ray.dir), 1, emit);
 			color *= emit;
 			break;
 		}
