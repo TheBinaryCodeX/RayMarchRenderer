@@ -273,7 +273,8 @@ void main()
 	}
 
 	vec2 pos = vec2(pix) / vec2(size.x, size.y);
-	vec3 dir = mix(mix(ray00, ray01, pos.x + 0.5 / size.x), mix(ray10, ray11, pos.x), pos.y + 0.5 / size.y);
+	//vec3 dir = mix(mix(ray00, ray01, pos.x + 0.5 / size.x), mix(ray10, ray11, pos.x), pos.y + 0.5 / size.y);
+	vec3 dir = mix(mix(ray00, ray01, pos.x + rand(pix.xy + vec2(time)) / size.x), mix(ray10, ray11, pos.x), pos.y + rand(pix.yx + vec2(time)) / size.y);
 
 	vec3 color = trace(eye, normalize(dir));
 
