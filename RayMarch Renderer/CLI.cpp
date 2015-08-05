@@ -126,6 +126,7 @@ void CLI::Init()
 
 void addScene(Json::Value scene)
 {
+	/*
 	for (int i = 0; i < scene["materials"].size(); i++)
 	{
 		Json::Value mat = scene["materials"][i];
@@ -143,6 +144,7 @@ void addScene(Json::Value scene)
 		m.mixFact = mat["mixFact"].asFloat();
 		Graphics::addMaterial(m);
 	}
+	*/
 
 	for (int i = 0; i < scene["objects"].size(); i++)
 	{

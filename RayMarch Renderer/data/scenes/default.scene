@@ -40,22 +40,34 @@
 	
 	"objects": [
 		{
-			"matID": 0,
+			"matID": 1,
 			"type": "box",
 			"centre": [0, -1.025, 0],
 			"radius": [32, 0.05, 32]
 		},
 		{
-			"matID": 1,
+			"matID": 2,
 			"type": "sphere",
-			"centre": [0, 0, 0],
+			"centre": [-1, 0, 0],
 			"radius": 1
 		},
 		{
-			"matID": 2,
+			"matID": 3,
+			"type": "sphere",
+			"centre": [1, 0, 0],
+			"radius": 1
+		},
+		{
+			"matID": 4,
+			"type": "box",
+			"centre": [-4, 1, 0],
+			"radius": [0.05, 2, 2]
+		},
+		{
+			"matID": 0,
 			"type": "sphere",
 			"centre": [8, 8, -4],
-			"radius": 4
+			"radius": 3
 		}
 	]
 }

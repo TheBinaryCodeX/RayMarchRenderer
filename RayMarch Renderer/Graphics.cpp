@@ -215,7 +215,7 @@ void Graphics::Init()
 
 	matLines.push_back("void mat_func_0(in RayData ray, out vec3 outColor, out vec3 outDir)");
 	matLines.push_back("{");
-	matLines.push_back("	shader_emission(ray, vec3(1, 1, 1), 8, outColor);");
+	matLines.push_back("	shader_emission(ray, vec3(1, 1, 1), 10, outColor);");
 	matLines.push_back("	outDir = vec3(0, 0, 0);");
 	matLines.push_back("}");
 
@@ -239,12 +239,6 @@ void Graphics::Init()
 	matLines.push_back("	shader_diffuse(ray, vec3(0.1, 0.8, 0.1), outColor, outDir);");
 	matLines.push_back("}");
 
-	objLines.push_back("d = opU(d, vec2(mapBox(p, vec3(0, -1.025, 0), vec3(32, 0.05, 32)), 1));");
-	objLines.push_back("d = opU(d, vec2(mapSphere(p, vec3(-1, 0, 0), 1), 2));");
-	objLines.push_back("d = opU(d, vec2(mapSphere(p, vec3(1, 0, 0), 1), 3));");
-	objLines.push_back("d = opU(d, vec2(mapBox(p, vec3(-4, 1, 0), vec3(0.05, 2, 2)), 4));");
-	objLines.push_back("d = opU(d, vec2(mapSphere(p, vec3(8, 8, -4), 4), 0));");
-
 	fullQuad.Create("FullQuad");
 	rayTrace.CreateCompute("RayMarch");
 
@@ -255,139 +249,6 @@ void Graphics::Init()
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.buffer);
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
-
-	/*
-	Material m0;
-	m0.id = 0;
-	m0.color = Vector3(0.8, 0.8, 0.8);
-	m0.reflective = false;
-	m0.transmissive = false;
-	m0.emissive = false;
-	m0.power = 0;
-	m0.rRoughness = 1;
-	m0.tRoughness = 1;
-	m0.ior = 1;
-	m0.mixFact = 1;
-	//materials.push_back(m0);
-
-	Material m1;
-	m1.id = 1;
-	m1.color = Vector3(1.0, 0.1, 0.1);
-	m1.reflective = false;
-	m1.transmissive = false;
-	m1.emissive = false;
-	m1.power = 0;
-	m1.rRoughness = 1;
-	m1.tRoughness = 1;
-	m1.ior = 1;
-	m1.mixFact = 1;
-	//materials.push_back(m1);
-
-	Material m2;
-	m2.id = 2;
-	m2.color = Vector3(0.1, 0.1, 1.0);
-	m2.reflective = true;
-	m2.transmissive = false;
-	m2.emissive = false;
-	m2.power = 0;
-	m2.rRoughness = 0.1;
-	m2.tRoughness = 1;
-	m2.ior = 1;
-	m2.mixFact = 0.2;
-	//materials.push_back(m2);
-
-	Material m3;
-	m3.id = 3;
-	m3.color = Vector3(0.1, 1.0, 0.1);
-	m3.reflective = false;
-	m3.transmissive = false;
-	m3.emissive = false;
-	m3.power = 0;
-	m3.rRoughness = 1;
-	m3.tRoughness = 1;
-	m3.ior = 1;
-	m3.mixFact = 1;
-	//materials.push_back(m3);
-
-	Material m4;
-	m4.id = 4;
-	m4.color = Vector3(1.0, 1.0, 1.0);
-	m4.reflective = false;
-	m4.transmissive = false;
-	m4.emissive = true;
-	m4.power = 512;
-	m4.rRoughness = 1;
-	m4.tRoughness = 1;
-	m4.ior = 1;
-	m4.mixFact = 1;
-	//materials.push_back(m4);
-
-	Material m5;
-	m5.id = 5;
-	m5.color = Vector3(0.2, 0.2, 0.2);
-	m5.reflective = false;
-	m5.transmissive = false;
-	m5.emissive = false;
-	m5.power = 0;
-	m5.rRoughness = 1;
-	m5.tRoughness = 1;
-	m5.ior = 1;
-	m5.mixFact = 1;
-	//materials.push_back(m5);
-
-	Object o0;
-	o0.matID = 0;
-	o0.type = 1;
-	o0.centre = Vector3(0, -1.025, 0);
-	o0.radius = Vector3(32, 0.05, 32);
-	//objects.push_back(o0);
-	*/
-
-	/*
-	Object o1;
-	o1.matID = 5;
-	o1.type = 1;
-	o1.centre = Vector3(-1.1, 0, 0);
-	o1.radius = Vector3(1, 1, 1);
-	objects.push_back(o1);
-
-	Object o2;
-	o2.matID = 5;
-	o2.type = 1;
-	o2.centre = Vector3(1.1, 0, 0);
-	o2.radius = Vector3(1, 1, 1);
-	objects.push_back(o2);
-	*/
-
-	/*
-	Object o1;
-	o1.matID = 1;
-	o1.type = 0;
-	o1.centre = Vector3(-1, 0, 0);
-	o1.radius = Vector3(1, 1, 1);
-	objects.push_back(o1);
-
-	Object o2;
-	o2.matID = 2;
-	o2.type = 0;
-	o2.centre = Vector3(1, 0, 0);
-	o2.radius = Vector3(1, 1, 1);
-	objects.push_back(o2);
-
-	Object o3;
-	o3.matID = 3;
-	o3.type = 1;
-	o3.centre = Vector3(-4, 1, 0);
-	o3.radius = Vector3(0.05, 2, 2);
-	objects.push_back(o3);
-
-	Object o4;
-	o4.matID = 4;
-	o4.type = 0;
-	o4.centre = Vector3(8, 8, -4);
-	o4.radius = Vector3(4, 4, 4);
-	objects.push_back(o4);
-	*/
 }
 
 int nextPowerOfTwo(int x) 
@@ -450,7 +311,8 @@ void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint pass
 
 void Graphics::Reload()
 {
-	//matLines.clear();
+	/*
+	matLines.clear();
 	for (int i = 0; i < materials.size(); i++)
 	{
 		Material m = materials[i];
@@ -478,15 +340,16 @@ void Graphics::Reload()
 		
 		matLines.push_back(line);
 	}
+	*/
 
-	//objLines.clear();
+	objLines.clear();
 	for (int i = 0; i < objects.size(); i++)
 	{
 		Object o = objects[i];
 
 		std::string line;
 
-		line += "d = opU(d, MapData(m" + std::to_string(o.matID) + ", ";
+		line += "d = opU(d, vec2(";
 
 		if (o.type == 0)
 		{
@@ -501,7 +364,7 @@ void Graphics::Reload()
 			line += "vec3(" + std::to_string(o.radius.x) + ", " + std::to_string(o.radius.y) + ", " + std::to_string(o.radius.z) + ")";
 		}
 
-		line += ")));";
+		line += std::string("), ") + std::to_string(o.matID) + ")); ";
 
 		objLines.push_back(line);
 	}
@@ -543,9 +406,9 @@ void Graphics::Reload()
 	rayTrace.DeleteCompute();
 	rayTrace.CreateCompute("RayMarch");
 
-	//glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.buffer);
-	//glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	//glClear(GL_COLOR_BUFFER_BIT);
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.buffer);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void Graphics::SaveImage(std::string path)

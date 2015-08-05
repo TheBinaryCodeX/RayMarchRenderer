@@ -110,21 +110,6 @@ public:
 	struct Material
 	{
 		GLuint id;
-
-		Vector3 color;
-
-		GLboolean reflective;
-		GLboolean transmissive;
-		GLboolean emissive;
-
-		GLfloat power;
-
-		GLfloat rRoughness;
-		GLfloat tRoughness;
-
-		GLfloat ior;
-
-		GLfloat mixFact;
 	};
 
 	struct Object

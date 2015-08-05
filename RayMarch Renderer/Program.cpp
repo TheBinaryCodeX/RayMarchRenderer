@@ -88,7 +88,7 @@ int main()
 	sf::Window window(sf::VideoMode(Screen::getScreenSize().x, Screen::getScreenSize().y, 32), "RayMarch Renderer", sf::Style::Titlebar | sf::Style::Close);
 
 	Graphics::Init();
-	//Graphics::Reload();
+	Graphics::Reload();
 
 	Camera camera = Camera(Vector3(0, 1, -2) * 4, Vector3(0, -1, 2).normalized(), Screen::getScreenSize().x / Screen::getScreenSize().y, PI / 4);
 	
@@ -116,7 +116,7 @@ int main()
 
 	bool willReload = false;
 
-	bool rendering = true;
+	bool rendering = false;
 
 	double oldTime = 0;
 	double newTime = 0;
@@ -139,8 +139,19 @@ int main()
 			CLI::CheckInput(rendering);
 			if (rendering)
 			{
+				x = gridWidth / 2 - 1;
+				y = gridHeight / 2 - 1;
+				dir = Vector2(-1, 0);
+
+				squaresPassed = 0;
+				lastSquaresPassed = 0;
+				distCount = 0;
+
 				Graphics::Reload();
-				camera.update(window);
+
+				camera.calculateRays();
+
+				willReload = false;
 			}
 		}
 		else
@@ -188,23 +199,6 @@ int main()
 				{
 					save();
 					saved = true;
-				}
-
-				if (willReload)
-				{
-					x = gridWidth / 2 - 1;
-					y = gridHeight / 2 - 1;
-					dir = Vector2(-1, 0);
-
-					squaresPassed = 0;
-					lastSquaresPassed = 0;
-					distCount = 0;
-
-					Graphics::Reload();
-
-					camera.calculateRays();
-
-					willReload = false;
 				}
 
 				rendering = false;
