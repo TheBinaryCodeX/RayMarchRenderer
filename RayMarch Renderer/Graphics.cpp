@@ -149,7 +149,7 @@ GLuint Graphics::loadShader(GLenum type, std::string path)
 
 	const char* src = content.c_str();
 
-	//std::cout << src << std::endl;
+	std::cout << src << std::endl;
 
 	GLuint shader = glCreateShader(type);
 	glShaderSource(shader, 1, &src, NULL);
@@ -213,13 +213,6 @@ void Graphics::Init()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	/*
-	matLines.push_back("Material m0 = Material(vec3(0.5, 0.5, 0.5), false, false, false, 0, 0.6, 1, 0, 1);");
-	matLines.push_back("Material m1 = Material(vec3(1.0, 0.1, 0.1), false, false, false, 0, 0.1, 1, 0, 1);");
-	matLines.push_back("Material m2 = Material(vec3(0.1, 0.1, 1.0), false, false, false, 0, 0.05, 1, 0, 0.2);");
-	matLines.push_back("Material m3 = Material(vec3(0.1, 1.0, 0.1), false, false, false, 0, 1, 1, 0, 1);");
-	matLines.push_back("Material m4 = Material(vec3(1.0, 1.0, 1.0), false, false, true, 4, 1, 1, 0, 1);");
-	*/
 	matLines.push_back("void mat_func_0(in RayData ray, out vec3 outColor, out vec3 outDir)");
 	matLines.push_back("{");
 	matLines.push_back("	shader_emission(ray, vec3(1, 1, 1), 8, outColor);");
@@ -245,20 +238,6 @@ void Graphics::Init()
 	matLines.push_back("{");
 	matLines.push_back("	shader_diffuse(ray, vec3(0.1, 0.8, 0.1), outColor, outDir);");
 	matLines.push_back("}");
-
-	/*
-	matLines.push_back("void mat_func_1(in RayData ray, out vec3 outColor, out vec3 outDir)");
-	matLines.push_back("{");
-	matLines.push_back("	vec3 diffDir, diff;");
-	matLines.push_back("	shader_diffuse(ray, vec3(0.8, 0.1, 0.1), diff, diffDir);");
-	matLines.push_back("	vec3 glossDir, gloss;");
-	matLines.push_back("	shader_glossy(ray, vec3(0.8), 0.1, gloss, glossDir);");
-	matLines.push_back("	vec3 mixedDir, mixedColor;");
-	matLines.push_back("	shader_mix(ray, diff, diffDir, gloss, glossDir, 0.5, mixedColor, mixedDir);");
-	matLines.push_back("	outColor = mixedColor;");
-	matLines.push_back("	outDir = mixedDir;");
-	matLines.push_back("}");
-	*/
 
 	objLines.push_back("d = opU(d, vec2(mapBox(p, vec3(0, -1.025, 0), vec3(32, 0.05, 32)), 1));");
 	objLines.push_back("d = opU(d, vec2(mapSphere(p, vec3(-1, 0, 0), 1), 2));");
@@ -471,7 +450,7 @@ void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint pass
 
 void Graphics::Reload()
 {
-	matLines.clear();
+	//matLines.clear();
 	for (int i = 0; i < materials.size(); i++)
 	{
 		Material m = materials[i];
@@ -500,7 +479,7 @@ void Graphics::Reload()
 		matLines.push_back(line);
 	}
 
-	objLines.clear();
+	//objLines.clear();
 	for (int i = 0; i < objects.size(); i++)
 	{
 		Object o = objects[i];
@@ -527,26 +506,46 @@ void Graphics::Reload()
 		objLines.push_back(line);
 	}
 	
-	///*
-	matLines.push_back("Material m0 = Material(vec3(0.8, 0.8, 0.8), false, false, false, 0, 0.6, 1, 0, 1);");
-	matLines.push_back("Material m1 = Material(vec3(1.0, 0.1, 0.1), false, false, false, 0, 0.1, 1, 0, 1);");
-	matLines.push_back("Material m2 = Material(vec3(0.1, 0.1, 1.0), false, false, false, 0, 0.05, 1, 0, 0.2);");
-	matLines.push_back("Material m3 = Material(vec3(0.1, 1.0, 0.1), false, false, false, 0, 1, 1, 0, 1);");
-	matLines.push_back("Material m4 = Material(vec3(1.0, 1.0, 1.0), false, false, true, 512, 1, 1, 0, 1);");
+	/*
+	matLines.push_back("void mat_func_0(in RayData ray, out vec3 outColor, out vec3 outDir)");
+	matLines.push_back("{");
+	matLines.push_back("	shader_emission(ray, vec3(1, 1, 1), 8, outColor);");
+	matLines.push_back("	outDir = vec3(0, 0, 0);");
+	matLines.push_back("}");
 
-	objLines.push_back("d = opU(d, MapData(m0, mapBox(p, vec3(0, -1.025, 0), vec3(32, 0.05, 32))));");
-	objLines.push_back("d = opU(d, MapData(m1, mapSphere(p, vec3(-1, 0, 0), 1)));");
-	objLines.push_back("d = opU(d, MapData(m2, mapSphere(p, vec3(1, 0, 0), 1)));");
-	objLines.push_back("d = opU(d, MapData(m3, mapBox(p, vec3(-4, 1, 0), vec3(0.05, 2, 2))));");
-	objLines.push_back("d = opU(d, MapData(m4, mapSphere(p, vec3(8, 8, -4), 4)));");
-	//*/
+	matLines.push_back("void mat_func_1(in RayData ray, out vec3 outColor, out vec3 outDir)");
+	matLines.push_back("{");
+	matLines.push_back("	shader_diffuse(ray, vec3(0.5, 0.5, 0.5), outColor, outDir);");
+	matLines.push_back("}");
+
+	matLines.push_back("void mat_func_2(in RayData ray, out vec3 outColor, out vec3 outDir)");
+	matLines.push_back("{");
+	matLines.push_back("	shader_diffuse(ray, vec3(0.8, 0.1, 0.1), outColor, outDir);");
+	matLines.push_back("}");
+
+	matLines.push_back("void mat_func_3(in RayData ray, out vec3 outColor, out vec3 outDir)");
+	matLines.push_back("{");
+	matLines.push_back("	shader_diffuse(ray, vec3(0.1, 0.1, 0.8), outColor, outDir);");
+	matLines.push_back("}");
+
+	matLines.push_back("void mat_func_4(in RayData ray, out vec3 outColor, out vec3 outDir)");
+	matLines.push_back("{");
+	matLines.push_back("	shader_diffuse(ray, vec3(0.1, 0.8, 0.1), outColor, outDir);");
+	matLines.push_back("}");
+
+	objLines.push_back("d = opU(d, vec2(mapBox(p, vec3(0, -1.025, 0), vec3(32, 0.05, 32)), 1));");
+	objLines.push_back("d = opU(d, vec2(mapSphere(p, vec3(-1, 0, 0), 1), 2));");
+	objLines.push_back("d = opU(d, vec2(mapSphere(p, vec3(1, 0, 0), 1), 3));");
+	objLines.push_back("d = opU(d, vec2(mapBox(p, vec3(-4, 1, 0), vec3(0.05, 2, 2)), 4));");
+	objLines.push_back("d = opU(d, vec2(mapSphere(p, vec3(8, 8, -4), 4), 0));");
+	*/
 
 	rayTrace.DeleteCompute();
 	rayTrace.CreateCompute("RayMarch");
 
-	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.buffer);
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
+	//glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.buffer);
+	//glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	//glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void Graphics::SaveImage(std::string path)

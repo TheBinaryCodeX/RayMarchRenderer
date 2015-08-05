@@ -13,8 +13,6 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 const float maxDist = 1000;
 int maxSteps = 512;
 
-const mat2 m = mat2(0.80, 0.60, -0.60, 0.80);
-
 uniform int passes;
 
 uniform vec4 bounds;
@@ -86,8 +84,6 @@ vec2 opU(vec2 a, vec2 b)
 vec2 map(vec3 p)
 {
 	vec2 d = vec2(maxDist, -1);
-
-	//#MATINSERT
 
 	//#OBJINSERT
 

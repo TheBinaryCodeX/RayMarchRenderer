@@ -140,6 +140,7 @@ int main()
 			if (rendering)
 			{
 				Graphics::Reload();
+				camera.update(window);
 			}
 		}
 		else

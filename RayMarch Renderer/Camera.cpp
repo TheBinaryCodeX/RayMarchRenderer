@@ -124,6 +124,9 @@ void Camera::update(sf::Window& window)
 	//float yAngle = (int)sf::Keyboard::isKeyPressed(sf::Keyboard::A) - (int)sf::Keyboard::isKeyPressed(sf::Keyboard::D);
 	//float xAngle = (int)sf::Keyboard::isKeyPressed(sf::Keyboard::W) - (int)sf::Keyboard::isKeyPressed(sf::Keyboard::S);
 
+	calculateRays();
+
+	/*
 	Vector2 mouse = Vector2(sf::Mouse::getPosition(window).x, sf::Mouse::getPosition(window).y);
 
 	Vector2 oldLastPos = lastMouse;
@@ -153,4 +156,5 @@ void Camera::update(sf::Window& window)
 			orbit(Vector2(mouse.x, mouse.y) * 0.0001);
 		}
 	}
+	*/
 }
