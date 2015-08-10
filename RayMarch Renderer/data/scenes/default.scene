@@ -1,40 +1,99 @@
 {
 	"materials": [
 		{
-			"id": 0,
-			"color": [0.8, 0.8, 0.8],
-			"reflective": false,
-			"transmissive": false,
-			"emissive": false,
-			"power": 0,
-			"rRoughness": 1,
-			"tRoughness": 1,
-			"ior": 1,
-			"mixFact": 1
+			"total_vars": 1,
+		
+			"nodes": [
+				{
+					"name": "shader_emission",
+					"inputs": [
+						[1.0, 1.0, 1.0],
+						[10, 10, 10]
+					],
+					"outputs": [
+						0
+					]
+				}
+			],
+			
+			"color": 0,
+			"dir": -1
 		},
 		{
-			"id": 1,
-			"color": [1.0, 0.1, 0.1],
-			"reflective": false,
-			"transmissive": false,
-			"emissive": false,
-			"power": 0,
-			"rRoughness": 1,
-			"tRoughness": 1,
-			"ior": 1,
-			"mixFact": 1
+			"total_vars": 2,
+		
+			"nodes": [
+				{
+					"name": "shader_diffuse",
+					"inputs": [
+						[0.8, 0.8, 0.8]
+					],
+					"outputs": [
+						0,
+						1
+					]
+				}
+			],
+			
+			"color": 0,
+			"dir": 1
 		},
 		{
-			"id": 2,
-			"color": [1.0, 1.0, 1.0],
-			"reflective": false,
-			"transmissive": false,
-			"emissive": true,
-			"power": 512,
-			"rRoughness": 1,
-			"tRoughness": 1,
-			"ior": 1,
-			"mixFact": 1
+			"total_vars": 2,
+		
+			"nodes": [
+				{
+					"name": "shader_diffuse",
+					"inputs": [
+						[0.8, 0.1, 0.1]
+					],
+					"outputs": [
+						0,
+						1
+					]
+				}
+			],
+			
+			"color": 0,
+			"dir": 1
+		},
+		{
+			"total_vars": 2,
+		
+			"nodes": [
+				{
+					"name": "shader_diffuse",
+					"inputs": [
+						[0.1, 0.1, 0.8]
+					],
+					"outputs": [
+						0,
+						1
+					]
+				}
+			],
+			
+			"color": 0,
+			"dir": 1
+		},
+		{
+			"total_vars": 2,
+		
+			"nodes": [
+				{
+					"name": "shader_diffuse",
+					"inputs": [
+						[0.1, 0.8, 0.1]
+					],
+					"outputs": [
+						0,
+						1
+					]
+				}
+			],
+			
+			"color": 0,
+			"dir": 1
 		}
 	],
 	

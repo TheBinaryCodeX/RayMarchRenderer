@@ -3,7 +3,7 @@
 #include "SFML\Window.hpp"
 #include "SOIL.h"
 
-std::vector<Graphics::Material> materials;
+std::vector<Json::Value> materials;
 std::vector<Graphics::Object> objects;
 
 std::vector<std::string> matLines;
@@ -149,7 +149,7 @@ GLuint Graphics::loadShader(GLenum type, std::string path)
 
 	const char* src = content.c_str();
 
-	std::cout << src << std::endl;
+	//std::cout << src << std::endl;
 
 	GLuint shader = glCreateShader(type);
 	glShaderSource(shader, 1, &src, NULL);
@@ -213,9 +213,10 @@ void Graphics::Init()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	/*
 	matLines.push_back("void mat_func_0(in RayData ray, out vec3 outColor, out vec3 outDir)");
 	matLines.push_back("{");
-	matLines.push_back("	shader_emission(ray, vec3(1, 1, 1), 10, outColor);");
+	matLines.push_back("	shader_emission(ray, vec3(1, 1, 1), vec3(10, 0, 0), outColor);");
 	matLines.push_back("	outDir = vec3(0, 0, 0);");
 	matLines.push_back("}");
 
@@ -238,6 +239,7 @@ void Graphics::Init()
 	matLines.push_back("{");
 	matLines.push_back("	shader_diffuse(ray, vec3(0.1, 0.8, 0.1), outColor, outDir);");
 	matLines.push_back("}");
+	*/
 
 	fullQuad.Create("FullQuad");
 	rayTrace.CreateCompute("RayMarch");
@@ -311,36 +313,68 @@ void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint pass
 
 void Graphics::Reload()
 {
-	/*
 	matLines.clear();
 	for (int i = 0; i < materials.size(); i++)
 	{
-		Material m = materials[i];
+		matLines.push_back(std::string("void mat_func_") + std::to_string(i) + "(in RayData ray, out vec3 outColor, out vec3 outDir)");
+		matLines.push_back("{");
 
-		std::string line;
+		Json::Value mat = materials[i];
 
-		line += std::string("Material m") + std::to_string(m.id) + " = Material(";
+		matLines.push_back(std::string("vec3 vars[") + mat["total_vars"].asString() + "];");
 
-		line += "vec3(" + std::to_string(m.color.x) + ", " + std::to_string(m.color.y) + ", " + std::to_string(m.color.z) + "), ";
+		for (int j = 0; j < mat["nodes"].size(); j++)
+		{
+			std::string func;
 
-		line += m.reflective ? "true, " : "false, ";
-		line += m.transmissive ? "true, " : "false, ";
-		line += m.emissive ? "true, " : "false, ";
+			Json::Value node = mat["nodes"][j];
 
-		line += std::to_string(m.power) + ", ";
+			func += node["name"].asString() + "(ray, ";
 
-		line += std::to_string(m.rRoughness) + ", ";
-		line += std::to_string(m.tRoughness) + ", ";
+			for (int k = 0; k < node["inputs"].size(); k++)
+			{
+				if (node["inputs"][k].isArray())
+				{
+					Json::Value input = node["inputs"][k];
+					func += "vec3(" + std::to_string(input[0].asFloat()) + ", " + std::to_string(input[1].asFloat()) + ", " + std::to_string(input[2].asFloat()) + "), ";
+				}
+				else
+				{
+					func += "vars[" + std::to_string(node["inputs"][k].asInt()) + "], ";
+				}
+			}
 
-		line += std::to_string(m.ior) + ", ";
+			for (int k = 0; k < node["outputs"].size(); k++)
+			{
+				func += "vars[" + std::to_string(node["outputs"][k].asInt()) + "]";
+				if (k < node["outputs"].size() - 1)
+				{
+					func += ", ";
+				}
+			}
 
-		line += std::to_string(m.mixFact);
+			func += ");";
 
-		line += ");";
-		
-		matLines.push_back(line);
+			matLines.push_back(func);
+		}
+
+		if (mat["color"].asInt() != -1)
+		{
+			matLines.push_back(std::string("outColor = vars[") + std::to_string(mat["color"].asInt()) + "];");
+		}
+
+		if (mat["dir"].asInt() != -1)
+		{
+			matLines.push_back(std::string("outDir = vars[") + std::to_string(mat["dir"].asInt()) + "];");
+		}
+
+		matLines.push_back("}");
 	}
-	*/
+
+	for (int i = 0; i < matLines.size(); i++)
+	{
+		std::cout << matLines[i] << std::endl;
+	}
 
 	objLines.clear();
 	for (int i = 0; i < objects.size(); i++)
@@ -429,7 +463,7 @@ void Graphics::SaveImage(std::string path)
 	);
 }
 
-void Graphics::addMaterial(Material material)
+void Graphics::addMaterial(Json::Value material)
 {
 	materials.push_back(material);
 }

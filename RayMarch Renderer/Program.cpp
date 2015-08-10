@@ -94,7 +94,7 @@ int main()
 	
 	CLI::Init();
 
-	int samples = 16;
+	int samples = 32;
 	int currentSample = 0;
 
 	int gridWidth = 4;
@@ -137,6 +137,8 @@ int main()
 		if (!rendering)
 		{
 			CLI::CheckInput(rendering);
+
+			// Reload
 			if (rendering)
 			{
 				x = gridWidth / 2 - 1;

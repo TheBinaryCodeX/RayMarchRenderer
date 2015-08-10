@@ -160,10 +160,10 @@ vec3 randHemisphere(vec2 randSeed1, vec2 randSeed2, vec3 dir, vec3 normal)
 }
 
 // Shader Functions
-void shader_mix(in RayData ray, in vec3 inColor1, in vec3 inDir1, in vec3 inColor2, in vec3 inDir2, in float inFactor, out vec3 outColor, out vec3 outDir)
+void shader_mix(in RayData ray, in vec3 inColor1, in vec3 inDir1, in vec3 inColor2, in vec3 inDir2, in vec3 inFactor, out vec3 outColor, out vec3 outDir)
 {
 	float r = rand(ray.origin.zx + vec2(time));
-	if (r < inFactor)
+	if (r < inFactor.x)
 	{
 		outColor = inColor2;
 		outDir = inDir2;
@@ -186,7 +186,7 @@ void shader_diffuse(in RayData ray, in vec3 inColor, out vec3 outColor, out vec3
 	outDir = randHemisphere(rs1, rs2, ray.dir, getNormal(ray.hit));
 }
 
-void shader_glossy(in RayData ray, in vec3 inColor, in float inRoughness, out vec3 outColor, out vec3 outDir)
+void shader_glossy(in RayData ray, in vec3 inColor, in vec3 inRoughness, out vec3 outColor, out vec3 outDir)
 {
 	// Color
 	outColor = inColor;
@@ -194,12 +194,12 @@ void shader_glossy(in RayData ray, in vec3 inColor, in float inRoughness, out ve
 	// Direction
 	vec2 rs1 = ray.hit.yx + vec2(time);
 	vec2 rs2 = ray.hit.xz + vec2(time);
-	outDir = mix(randHemisphere(rs1, rs2, ray.dir, getNormal(ray.hit)), reflect(ray.dir, getNormal(ray.hit)), 1.0 - inRoughness);
+	outDir = mix(randHemisphere(rs1, rs2, ray.dir, getNormal(ray.hit)), reflect(ray.dir, getNormal(ray.hit)), 1.0 - inRoughness.x);
 }
 
-void shader_emission(in RayData ray, in vec3 inColor, in float inPower, out vec3 outColor)
+void shader_emission(in RayData ray, in vec3 inColor, in vec3 inPower, out vec3 outColor)
 {
-	outColor = inColor * inPower;
+	outColor = inColor * inPower.x;
 }
 
 //#MATFUNCINSERT
@@ -226,8 +226,8 @@ vec3 trace(vec3 origin, vec3 dir)
 
 		if (ray.t < maxDist)
 		{
-			vec3 newColor;
-			vec3 newDir;
+			vec3 newColor = vec3(0);
+			vec3 newDir = vec3(0);
 
 			switch (int(v.y))
 			{
@@ -249,7 +249,7 @@ vec3 trace(vec3 origin, vec3 dir)
 		else
 		{
 			vec3 emit;
-			shader_emission(ray, skyColor(ray.dir), 1, emit);
+			shader_emission(ray, skyColor(ray.dir), vec3(1, 0, 0), emit);
 			color *= emit;
 			break;
 		}

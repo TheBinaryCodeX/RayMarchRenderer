@@ -146,6 +146,11 @@ void addScene(Json::Value scene)
 	}
 	*/
 
+	for (int i = 0; i < scene["materials"].size(); i++)
+	{
+		Graphics::addMaterial(scene["materials"][i]);
+	}
+
 	for (int i = 0; i < scene["objects"].size(); i++)
 	{
 		Json::Value obj = scene["objects"][i];
