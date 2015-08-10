@@ -1,6 +1,8 @@
 {
 	"materials": [
 		{
+			"id": 0,
+		
 			"total_vars": 2,
 		
 			"nodes": [
@@ -20,7 +22,9 @@
 			"dir": 1
 		},
 		{
-			"total_vars": 2,
+			"id": 1,
+		
+			"total_vars": 7,
 		
 			"nodes": [
 				{
@@ -32,13 +36,49 @@
 						0,
 						1
 					]
+				},
+				{
+					"name": "shader_glossy",
+					"inputs": [
+						[0.8, 0.8, 0.8],
+						[0.02, 0.02, 0.02]
+					],
+					"outputs": [
+						2,
+						3
+					]
+				},
+				{
+					"name": "node_facing",
+					"inputs": [
+						
+					],
+					"outputs": [
+						4
+					]
+				},
+				{
+					"name": "shader_mix",
+					"inputs": [
+						2,
+						3,
+						0,
+						1,
+						4
+					],
+					"outputs": [
+						5,
+						6
+					]
 				}
 			],
 			
-			"color": 0,
-			"dir": 1
+			"color": 5,
+			"dir": 6
 		},
 		{
+			"id": 2,
+		
 			"total_vars": 1,
 		
 			"nodes": [
@@ -46,7 +86,7 @@
 					"name": "shader_emission",
 					"inputs": [
 						[1.0, 1.0, 1.0],
-						[4, 4, 4]
+						[8, 8, 8]
 					],
 					"outputs": [
 						0
@@ -75,8 +115,8 @@
 		{
 			"matID": 2,
 			"type": "sphere",
-			"centre": [2, 2, 0],
-			"radius": 1
+			"centre": [4, 4, -4],
+			"radius": 2
 		}
 	]
 }

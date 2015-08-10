@@ -159,11 +159,22 @@ vec3 randHemisphere(vec2 randSeed1, vec2 randSeed2, vec3 dir, vec3 normal)
 	return bDir;
 }
 
+float grayscale(vec3 color)
+{
+	return (color.r + color.g + color.b) / 3;
+}
+
+// Node Functions
+void node_facing(in RayData ray, out vec3 outFactor)
+{
+	outFactor = vec3(clamp(dot(-ray.dir, getNormal(ray.hit)), 0.0, 1.0));
+}
+
 // Shader Functions
 void shader_mix(in RayData ray, in vec3 inColor1, in vec3 inDir1, in vec3 inColor2, in vec3 inDir2, in vec3 inFactor, out vec3 outColor, out vec3 outDir)
 {
 	float r = rand(ray.origin.zx + vec2(time));
-	if (r < inFactor.x)
+	if (r < grayscale(inFactor))
 	{
 		outColor = inColor2;
 		outDir = inDir2;
@@ -194,12 +205,12 @@ void shader_glossy(in RayData ray, in vec3 inColor, in vec3 inRoughness, out vec
 	// Direction
 	vec2 rs1 = ray.hit.yx + vec2(time);
 	vec2 rs2 = ray.hit.xz + vec2(time);
-	outDir = mix(randHemisphere(rs1, rs2, ray.dir, getNormal(ray.hit)), reflect(ray.dir, getNormal(ray.hit)), 1.0 - inRoughness.x);
+	outDir = mix(randHemisphere(rs1, rs2, ray.dir, getNormal(ray.hit)), reflect(ray.dir, getNormal(ray.hit)), 1.0 - grayscale(inRoughness));
 }
 
 void shader_emission(in RayData ray, in vec3 inColor, in vec3 inPower, out vec3 outColor)
 {
-	outColor = inColor * inPower.x;
+	outColor = inColor * grayscale(inPower);
 }
 
 //#MATFUNCINSERT
@@ -249,7 +260,7 @@ vec3 trace(vec3 origin, vec3 dir)
 		else
 		{
 			vec3 emit;
-			shader_emission(ray, skyColor(ray.dir), vec3(1, 0, 0), emit);
+			shader_emission(ray, skyColor(ray.dir), vec3(1, 1, 1), emit);
 			color *= emit;
 			break;
 		}

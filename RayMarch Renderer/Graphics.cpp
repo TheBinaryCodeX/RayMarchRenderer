@@ -316,10 +316,10 @@ void Graphics::Reload()
 	matLines.clear();
 	for (int i = 0; i < materials.size(); i++)
 	{
-		matLines.push_back(std::string("void mat_func_") + std::to_string(i) + "(in RayData ray, out vec3 outColor, out vec3 outDir)");
-		matLines.push_back("{");
-
 		Json::Value mat = materials[i];
+
+		matLines.push_back(std::string("void mat_func_") + std::to_string(mat["id"].asInt()) + "(in RayData ray, out vec3 outColor, out vec3 outDir)");
+		matLines.push_back("{");
 
 		matLines.push_back(std::string("vec3 vars[") + mat["total_vars"].asString() + "];");
 

@@ -1,6 +1,8 @@
 {
 	"materials": [
 		{
+			"id": 0,
+		
 			"total_vars": 1,
 		
 			"nodes": [
@@ -20,6 +22,8 @@
 			"dir": -1
 		},
 		{
+			"id": 1,
+		
 			"total_vars": 2,
 		
 			"nodes": [
@@ -39,6 +43,8 @@
 			"dir": 1
 		},
 		{
+			"id": 2,
+		
 			"total_vars": 2,
 		
 			"nodes": [
@@ -58,6 +64,8 @@
 			"dir": 1
 		},
 		{
+			"id": 3,
+		
 			"total_vars": 2,
 		
 			"nodes": [
@@ -77,6 +85,8 @@
 			"dir": 1
 		},
 		{
+			"id": 4,
+		
 			"total_vars": 2,
 		
 			"nodes": [
