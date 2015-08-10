@@ -94,7 +94,7 @@ int main()
 	
 	CLI::Init();
 
-	int samples = 32;
+	int samples = 128;
 	int currentSample = 0;
 
 	int gridWidth = 4;
