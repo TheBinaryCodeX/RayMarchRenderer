@@ -102,21 +102,66 @@
 	"objects": [
 		{
 			"matID": 0,
-			"type": "box",
-			"centre": [0, -1.025, 0],
-			"radius": [32, 0.05, 32]
+			
+			"total_vars": 1,
+			
+			"nodes": [
+				{
+					"name": "map_box",
+					"inputs": [
+						-1,
+						[0, -1.025, 0],
+						[32, 0.05, 32]
+					],
+					"outputs": [
+						0
+					]
+				}
+			],
+			
+			"distance": 0
 		},
 		{
 			"matID": 1,
-			"type": "sphere",
-			"centre": [0, 0, 0],
-			"radius": 1
+			
+			"total_vars": 1,
+			
+			"nodes": [
+				{
+					"name": "map_sphere",
+					"inputs": [
+						-1,
+						[0, 0, 0],
+						[1, 1, 1]
+					],
+					"outputs": [
+						0
+					]
+				}
+			],
+			
+			"distance": 0
 		},
 		{
 			"matID": 2,
-			"type": "sphere",
-			"centre": [4, 4, -4],
-			"radius": 2
+			
+			"total_vars": 1,
+			
+			"nodes": [
+				{
+					"name": "map_sphere",
+					"inputs": [
+						-1,
+						[4, 4, -4],
+						[2, 2, 2]
+					],
+					"outputs": [
+						0
+					]
+				}
+			],
+			
+			"distance": 0
 		}
 	]
 }

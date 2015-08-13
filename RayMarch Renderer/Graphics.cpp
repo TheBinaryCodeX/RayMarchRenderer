@@ -204,6 +204,8 @@ Graphics::Shader rayTrace;
 Graphics::Framebuffer lightmap;
 Graphics::Framebuffer framebuffer;
 
+GLuint envTex;
+
 GLuint fqVAO;
 void createFQ()
 {
@@ -250,6 +252,8 @@ void Graphics::Init()
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.buffer);
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
+
+	envTex = SOIL_load_OGL_texture("data\\textures\\environment_texture_test.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
 }
 
 int nextPowerOfTwo(int x) 
@@ -280,6 +284,12 @@ void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint pass
 	glUniform4f(glGetUniformLocation(rayTrace.program, "bounds"), min.x, min.y, max.x, max.y);
 
 	glUniform1f(glGetUniformLocation(rayTrace.program, "time"), currentTime);
+
+	glUniform1i(glGetUniformLocation(rayTrace.program, "useEnvTex"), 0);
+	glUniform1i(glGetUniformLocation(rayTrace.program, "envTex"), 0);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, envTex);
 
 	glBindImageTexture(0, framebuffer.color, 0, false, 0, GL_READ_WRITE, GL_RGBA32F);
 

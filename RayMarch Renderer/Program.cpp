@@ -90,7 +90,7 @@ int main()
 	Graphics::Init();
 	Graphics::Reload();
 
-	Camera camera = Camera(Vector3(0, 1, -2) * 4, Vector3(0, -1, 2).normalized(), Screen::getScreenSize().x / Screen::getScreenSize().y, PI / 4);
+	Camera camera = Camera(Vector3(0, 4, -8), Vector3(0, -4, 8).normalized(), Screen::getScreenSize().x / Screen::getScreenSize().y, PI / 4);
 	
 	CLI::Init();
 

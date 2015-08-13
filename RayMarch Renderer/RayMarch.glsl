@@ -19,6 +19,9 @@ uniform vec4 bounds;
 
 uniform float time;
 
+uniform sampler2D envTex;
+uniform int useEnvTex;
+
 uniform float tempFact;
 uniform float tempFact2;
 
@@ -42,6 +45,25 @@ highp float rand(vec2 co)
 
 vec3 skyColor(vec3 dir)
 {
+	if (useEnvTex != 0)
+	{
+		float PI = 3.141592653;
+
+		float theta = dir.y;
+		float phi = atan(dir.z, dir.x);
+
+		if (phi < 0)
+		{
+			phi += 2 * PI;
+		}
+
+		vec2 uv;
+		uv.x = phi / (2 * PI);
+		uv.y = 1.0 - (dir.y * 0.5 + 0.5);
+
+		return texture2D(envTex, uv).rgb;
+	}
+
 	//return vec3(0.5);
 	//return vec3(0);
 	return vec3(0.015);
@@ -272,7 +294,7 @@ vec3 trace(vec3 origin, vec3 dir)
 	vec3 d = dir;
 
 	int bounces = 0;
-	while (bounces < 8)
+	while (bounces < 512)
 	{
 		bounces++;
 
