@@ -131,7 +131,7 @@ public:
 	static void SaveImage(std::string path);
 
 	static void addMaterial(Json::Value material);
-	static void addObject(Object object);
+	static void addObject(Json::Value object);
 
 	static void setView(Vector3 eye, Vector3 ray00, Vector3 ray01, Vector3 ray10, Vector3 ray11);
 };

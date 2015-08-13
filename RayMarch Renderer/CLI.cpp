@@ -153,6 +153,9 @@ void addScene(Json::Value scene)
 
 	for (int i = 0; i < scene["objects"].size(); i++)
 	{
+		Graphics::addObject(scene["objects"][i]);
+
+		/*
 		Json::Value obj = scene["objects"][i];
 
 		Graphics::Object o;
@@ -172,6 +175,7 @@ void addScene(Json::Value scene)
 		}
 
 		Graphics::addObject(o);
+		*/
 	}
 }
 

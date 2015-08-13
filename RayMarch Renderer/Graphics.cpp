@@ -4,7 +4,7 @@
 #include "SOIL.h"
 
 std::vector<Json::Value> materials;
-std::vector<Graphics::Object> objects;
+std::vector<Json::Value> objects;
 
 std::vector<std::string> matLines;
 std::vector<std::string> objLines;
@@ -88,10 +88,30 @@ GLuint Graphics::loadShader(GLenum type, std::string path)
 				lines.insert(lines.begin() + i, std::string("			case ") + std::to_string(j) + ":");
 			}
 		}
-		else if (line.find("//#OBJINSERT") != std::string::npos)
+		else if (line.find("//#OBJFUNCINSERT") != std::string::npos)
 		{
 			lines.erase(lines.begin() + i);
 			lines.insert(lines.begin() + i, objLines.begin(), objLines.end());
+		}
+		else if (line.find("//#OBJINSERT") != std::string::npos)
+		{
+			lines.erase(lines.begin() + i);
+
+			int objNum = 0;
+			for (int j = 0; j < objLines.size(); j++)
+			{
+				if (objLines[j] == "}")
+				{
+					objNum++;
+				}
+			}
+
+			for (int j = objNum - 1; j >= 0; j--)
+			{
+				lines.insert(lines.begin() + i, std::string("	d = opU(d, vec2(d") + std::to_string(j) + ".x, " + std::to_string(objects[j]["matID"].asInt()) + "));");
+				lines.insert(lines.begin() + i, std::string("	obj_func_") + std::to_string(j) + "(p, " + "d" + std::to_string(j) + ");");
+				lines.insert(lines.begin() + i, std::string("	vec3 d") + std::to_string(j) + ";");
+			}
 		}
 	}
 
@@ -151,6 +171,13 @@ GLuint Graphics::loadShader(GLenum type, std::string path)
 
 	//std::cout << src << std::endl;
 
+	/*
+	for (int i = 0; i < lines.size(); i++)
+	{
+		std::cout << std::to_string(i + 1) << " " << lines[i] << std::endl;
+	}
+	*/
+
 	GLuint shader = glCreateShader(type);
 	glShaderSource(shader, 1, &src, NULL);
 	glCompileShader(shader);
@@ -183,9 +210,9 @@ void createFQ()
 	std::vector<GLfloat> vertexData = std::vector<GLfloat>
 	{
 		-1.0f, 1.0f, 0.0f, 0.0f,
-			1.0f, 1.0f, 1.0f, 0.0f,
-			1.0f, -1.0f, 1.0f, 1.0f,
-			-1.0f, -1.0f, 0.0f, 1.0f
+		1.0f, 1.0f, 1.0f, 0.0f,
+		1.0f, -1.0f, 1.0f, 1.0f,
+		-1.0f, -1.0f, 0.0f, 1.0f
 	};
 
 	glGenVertexArrays(1, &fqVAO);
@@ -212,34 +239,6 @@ void Graphics::Init()
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	/*
-	matLines.push_back("void mat_func_0(in RayData ray, out vec3 outColor, out vec3 outDir)");
-	matLines.push_back("{");
-	matLines.push_back("	shader_emission(ray, vec3(1, 1, 1), vec3(10, 0, 0), outColor);");
-	matLines.push_back("	outDir = vec3(0, 0, 0);");
-	matLines.push_back("}");
-
-	matLines.push_back("void mat_func_1(in RayData ray, out vec3 outColor, out vec3 outDir)");
-	matLines.push_back("{");
-	matLines.push_back("	shader_diffuse(ray, vec3(0.5, 0.5, 0.5), outColor, outDir);");
-	matLines.push_back("}");
-
-	matLines.push_back("void mat_func_2(in RayData ray, out vec3 outColor, out vec3 outDir)");
-	matLines.push_back("{");
-	matLines.push_back("	shader_diffuse(ray, vec3(0.8, 0.1, 0.1), outColor, outDir);");
-	matLines.push_back("}");
-
-	matLines.push_back("void mat_func_3(in RayData ray, out vec3 outColor, out vec3 outDir)");
-	matLines.push_back("{");
-	matLines.push_back("	shader_diffuse(ray, vec3(0.1, 0.1, 0.8), outColor, outDir);");
-	matLines.push_back("}");
-
-	matLines.push_back("void mat_func_4(in RayData ray, out vec3 outColor, out vec3 outDir)");
-	matLines.push_back("{");
-	matLines.push_back("	shader_diffuse(ray, vec3(0.1, 0.8, 0.1), outColor, outDir);");
-	matLines.push_back("}");
-	*/
 
 	fullQuad.Create("FullQuad");
 	rayTrace.CreateCompute("RayMarch");
@@ -371,71 +370,67 @@ void Graphics::Reload()
 		matLines.push_back("}");
 	}
 
-	for (int i = 0; i < matLines.size(); i++)
-	{
-		std::cout << matLines[i] << std::endl;
-	}
-
 	objLines.clear();
 	for (int i = 0; i < objects.size(); i++)
 	{
-		Object o = objects[i];
+		Json::Value obj = objects[i];
 
-		std::string line;
+		objLines.push_back(std::string("void obj_func_") + std::to_string(i) + "(in vec3 p, out vec3 d)");
+		objLines.push_back("{");
 
-		line += "d = opU(d, vec2(";
+		objLines.push_back(std::string("vec3 vars[") + obj["total_vars"].asString() + "];");
 
-		if (o.type == 0)
+		for (int j = 0; j < obj["nodes"].size(); j++)
 		{
-			line += "mapSphere(p, ";
-			line += "vec3(" + std::to_string(o.centre.x) + ", " + std::to_string(o.centre.y) + ", " + std::to_string(o.centre.z) + "), ";
-			line += std::to_string(o.radius.x);
-		}
-		else if (o.type == 1)
-		{
-			line += "mapBox(p, ";
-			line += "vec3(" + std::to_string(o.centre.x) + ", " + std::to_string(o.centre.y) + ", " + std::to_string(o.centre.z) + "), ";
-			line += "vec3(" + std::to_string(o.radius.x) + ", " + std::to_string(o.radius.y) + ", " + std::to_string(o.radius.z) + ")";
+			std::string func;
+
+			Json::Value node = obj["nodes"][j];
+
+			func += node["name"].asString() + "(";
+
+			for (int k = 0; k < node["inputs"].size(); k++)
+			{
+				if (node["inputs"][k].isArray())
+				{
+					Json::Value input = node["inputs"][k];
+					func += "vec3(" + std::to_string(input[0].asFloat()) + ", " + std::to_string(input[1].asFloat()) + ", " + std::to_string(input[2].asFloat()) + "), ";
+				}
+				else
+				{
+					if (node["inputs"][k].asInt() == -1)
+					{
+						func += "p, ";
+					}
+					else
+					{
+						func += "vars[" + std::to_string(node["inputs"][k].asInt()) + "], ";
+					}
+				}
+			}
+
+			for (int k = 0; k < node["outputs"].size(); k++)
+			{
+				func += "vars[" + std::to_string(node["outputs"][k].asInt()) + "]";
+				if (k < node["outputs"].size() - 1)
+				{
+					func += ", ";
+				}
+			}
+
+			func += ");";
+
+			objLines.push_back(func);
 		}
 
-		line += std::string("), ") + std::to_string(o.matID) + ")); ";
+		objLines.push_back(std::string("d = vars[") + std::to_string(obj["distance"].asInt()) + "];");
 
-		objLines.push_back(line);
+		objLines.push_back("}");
 	}
-	
-	/*
-	matLines.push_back("void mat_func_0(in RayData ray, out vec3 outColor, out vec3 outDir)");
-	matLines.push_back("{");
-	matLines.push_back("	shader_emission(ray, vec3(1, 1, 1), 8, outColor);");
-	matLines.push_back("	outDir = vec3(0, 0, 0);");
-	matLines.push_back("}");
 
-	matLines.push_back("void mat_func_1(in RayData ray, out vec3 outColor, out vec3 outDir)");
-	matLines.push_back("{");
-	matLines.push_back("	shader_diffuse(ray, vec3(0.5, 0.5, 0.5), outColor, outDir);");
-	matLines.push_back("}");
-
-	matLines.push_back("void mat_func_2(in RayData ray, out vec3 outColor, out vec3 outDir)");
-	matLines.push_back("{");
-	matLines.push_back("	shader_diffuse(ray, vec3(0.8, 0.1, 0.1), outColor, outDir);");
-	matLines.push_back("}");
-
-	matLines.push_back("void mat_func_3(in RayData ray, out vec3 outColor, out vec3 outDir)");
-	matLines.push_back("{");
-	matLines.push_back("	shader_diffuse(ray, vec3(0.1, 0.1, 0.8), outColor, outDir);");
-	matLines.push_back("}");
-
-	matLines.push_back("void mat_func_4(in RayData ray, out vec3 outColor, out vec3 outDir)");
-	matLines.push_back("{");
-	matLines.push_back("	shader_diffuse(ray, vec3(0.1, 0.8, 0.1), outColor, outDir);");
-	matLines.push_back("}");
-
-	objLines.push_back("d = opU(d, vec2(mapBox(p, vec3(0, -1.025, 0), vec3(32, 0.05, 32)), 1));");
-	objLines.push_back("d = opU(d, vec2(mapSphere(p, vec3(-1, 0, 0), 1), 2));");
-	objLines.push_back("d = opU(d, vec2(mapSphere(p, vec3(1, 0, 0), 1), 3));");
-	objLines.push_back("d = opU(d, vec2(mapBox(p, vec3(-4, 1, 0), vec3(0.05, 2, 2)), 4));");
-	objLines.push_back("d = opU(d, vec2(mapSphere(p, vec3(8, 8, -4), 4), 0));");
-	*/
+	for (int i = 0; i < objLines.size(); i++)
+	{
+		std::cout << objLines[i] << std::endl;
+	}
 
 	rayTrace.DeleteCompute();
 	rayTrace.CreateCompute("RayMarch");
@@ -468,7 +463,7 @@ void Graphics::addMaterial(Json::Value material)
 	materials.push_back(material);
 }
 
-void Graphics::addObject(Object object)
+void Graphics::addObject(Json::Value object)
 {
 	objects.push_back(object);
 }

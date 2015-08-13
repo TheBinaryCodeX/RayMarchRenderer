@@ -76,6 +76,55 @@ float mapBox(vec3 p, vec3 centre, vec3 radius)
 	return min(max(q.x, max(q.y, q.z)), 0) + length(max(q, 0));
 }
 
+void map_sphere(in vec3 p, in vec3 centre, in vec3 radius, out vec3 d)
+{
+	vec3 q = p - centre;
+	d = vec3(length(q) - radius.x);
+}
+
+void map_box(in vec3 p, in vec3 centre, in vec3 radius, out vec3 d)
+{
+	vec3 q = abs(p - centre) - radius;
+	d = vec3(min(max(q.x, max(q.y, q.z)), 0) + length(max(q, 0)));
+}
+
+// Operator Functions
+void op_union(in float a, in float b, out float c)
+{
+	c = min(a, b);
+}
+
+void op_subtract(in float a, in float b, out float c)
+{
+	c = max(a, -b);
+}
+
+void op_intersect(in float a, in float b, out float c)
+{
+	c = max(a, b);
+}
+
+// Domain Functions
+void domain_repeat(in vec3 p, in vec3 m, out vec3 q)
+{
+	q = p;
+
+	if (m.x != 0)
+	{
+		q.x = mod(p.x, m.x) - m.x * 0.5;
+	}
+	if (m.y != 0)
+	{
+		q.y = mod(p.y, m.y) - m.y * 0.5;
+	}
+	if (m.z != 0)
+	{
+		q.z = mod(p.z, m.z) - m.z * 0.5;
+	}
+}
+
+//#OBJFUNCINSERT
+
 vec2 opU(vec2 a, vec2 b)
 {
 	return a.x < b.x ? a : b;
@@ -223,7 +272,7 @@ vec3 trace(vec3 origin, vec3 dir)
 	vec3 d = dir;
 
 	int bounces = 0;
-	while (bounces < 512)
+	while (bounces < 8)
 	{
 		bounces++;
 
