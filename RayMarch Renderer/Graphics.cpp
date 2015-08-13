@@ -285,7 +285,7 @@ void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint pass
 
 	glUniform1f(glGetUniformLocation(rayTrace.program, "time"), currentTime);
 
-	glUniform1i(glGetUniformLocation(rayTrace.program, "useEnvTex"), 0);
+	glUniform1i(glGetUniformLocation(rayTrace.program, "useEnvTex"), 1);
 	glUniform1i(glGetUniformLocation(rayTrace.program, "envTex"), 0);
 
 	glActiveTexture(GL_TEXTURE0);
@@ -327,7 +327,7 @@ void Graphics::Reload()
 	{
 		Json::Value mat = materials[i];
 
-		matLines.push_back(std::string("void mat_func_") + std::to_string(mat["id"].asInt()) + "(in RayData ray, out vec3 outColor, out vec3 outDir)");
+		matLines.push_back(std::string("void mat_func_") + std::to_string(mat["id"].asInt()) + "(inout RayData ray, out vec3 outColor, out vec3 outDir)");
 		matLines.push_back("{");
 
 		matLines.push_back(std::string("vec3 vars[") + mat["total_vars"].asString() + "];");

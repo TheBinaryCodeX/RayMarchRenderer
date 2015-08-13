@@ -86,18 +86,7 @@ float smin(float a, float b, float k)
 	return mix(b, a, h) - k * h * (1.0 - h);
 }
 
-float mapSphere(vec3 p, vec3 centre, float radius)
-{
-	vec3 q = p - centre;
-	return length(q) - radius;
-}
-
-float mapBox(vec3 p, vec3 centre, vec3 radius)
-{
-	vec3 q = abs(p - centre) - radius;
-	return min(max(q.x, max(q.y, q.z)), 0) + length(max(q, 0));
-}
-
+// Map Functions
 void map_sphere(in vec3 p, in vec3 centre, in vec3 radius, out vec3 d)
 {
 	vec3 q = p - centre;
@@ -161,13 +150,14 @@ vec2 map(vec3 p)
 	return d;
 }
 
-vec2 march(vec3 origin, vec3 dir)
+vec2 march(vec3 origin, vec3 dir, float distMult)
 {
 	float t = 0;
 
 	for (int i = 0; i < maxSteps; i++)
 	{
 		vec2 d = map(origin + t * dir);
+		d.x *= distMult;
 
 		if (d.x < 0.001)
 		{
@@ -235,8 +225,8 @@ float grayscale(vec3 color)
 	return (color.r + color.g + color.b) / 3;
 }
 
-// Node Functions
-void node_facing(in RayData ray, out vec3 outFactor)
+// Misc Functions
+void misc_facing(in RayData ray, out vec3 outFactor)
 {
 	outFactor = vec3(clamp(dot(-ray.dir, getNormal(ray.hit)), 0.0, 1.0));
 }
@@ -279,6 +269,32 @@ void shader_glossy(in RayData ray, in vec3 inColor, in vec3 inRoughness, out vec
 	outDir = mix(randHemisphere(rs1, rs2, ray.dir, getNormal(ray.hit)), reflect(ray.dir, getNormal(ray.hit)), 1.0 - grayscale(inRoughness));
 }
 
+vec3 newHit;
+vec3 newHitDir;
+void shader_refraction(inout RayData ray, in vec3 inColor, in vec3 inIOR, in vec3 inRoughness, out vec3 outColor, out vec3 outDir)
+{
+	// Color
+	outColor = inColor;
+
+	// Direction
+	vec3 dir = normalize(refract(ray.dir, getNormal(ray.hit), 1.0 / grayscale(inIOR)));
+	vec2 v = march(ray.hit + getNormal(ray.hit) * -0.002, dir, -1);
+
+	newHit = ray.hit + v.x * dir;
+
+	vec2 rs1 = ray.hit.zy + vec2(time);
+	vec2 rs2 = ray.hit.yz + vec2(time);
+
+	vec3 rDir = normalize(refract(dir, -getNormal(newHit), grayscale(inIOR)));
+	vec3 dDir = randHemisphere(rs1, rs2, ray.dir, getNormal(newHit));
+
+	outDir = mix(dDir, rDir, 1.0 - grayscale(inRoughness));
+
+	newHitDir = outDir;
+
+	newHit += getNormal(newHit) * 0.003;
+}
+
 void shader_emission(in RayData ray, in vec3 inColor, in vec3 inPower, out vec3 outColor)
 {
 	outColor = inColor * grayscale(inPower);
@@ -294,11 +310,11 @@ vec3 trace(vec3 origin, vec3 dir)
 	vec3 d = dir;
 
 	int bounces = 0;
-	while (bounces < 512)
+	while (bounces < 8)
 	{
 		bounces++;
 
-		vec2 v = march(o, d);
+		vec2 v = march(o, d, 1);
 
 		RayData ray;
 		ray.origin = o;
@@ -317,6 +333,11 @@ vec3 trace(vec3 origin, vec3 dir)
 			}
 			
 			color *= newColor;
+
+			if (newDir == newHitDir)
+			{
+				ray.hit = newHit;
+			}
 
 			if (newDir == vec3(0, 0, 0))
 			{

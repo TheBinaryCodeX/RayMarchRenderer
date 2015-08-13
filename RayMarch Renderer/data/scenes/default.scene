@@ -45,7 +45,7 @@
 		{
 			"id": 2,
 		
-			"total_vars": 2,
+			"total_vars": 7,
 		
 			"nodes": [
 				{
@@ -57,11 +57,45 @@
 						0,
 						1
 					]
+				},
+				{
+					"name": "shader_glossy",
+					"inputs": [
+						[0.8, 0.8, 0.8],
+						[0.02, 0.02, 0.02]
+					],
+					"outputs": [
+						2,
+						3
+					]
+				},
+				{
+					"name": "misc_facing",
+					"inputs": [
+						
+					],
+					"outputs": [
+						4
+					]
+				},
+				{
+					"name": "shader_mix",
+					"inputs": [
+						2,
+						3,
+						0,
+						1,
+						4
+					],
+					"outputs": [
+						5,
+						6
+					]
 				}
 			],
 			
-			"color": 0,
-			"dir": 1
+			"color": 5,
+			"dir": 6
 		},
 		{
 			"id": 3,
@@ -87,23 +121,59 @@
 		{
 			"id": 4,
 		
-			"total_vars": 2,
+			"total_vars": 7,
 		
 			"nodes": [
 				{
-					"name": "shader_diffuse",
+					"name": "shader_refraction",
 					"inputs": [
-						[0.1, 0.8, 0.1]
+						[0.1, 0.8, 0.1],
+						[1.45, 1.45, 1.45],
+						[0.02, 0.02, 0.02]
 					],
 					"outputs": [
 						0,
 						1
 					]
+				},
+				{
+					"name": "shader_glossy",
+					"inputs": [
+						[0.8, 0.8, 0.8],
+						[0.02, 0.02, 0.02]
+					],
+					"outputs": [
+						2,
+						3
+					]
+				},
+				{
+					"name": "misc_facing",
+					"inputs": [
+						
+					],
+					"outputs": [
+						4
+					]
+				},
+				{
+					"name": "shader_mix",
+					"inputs": [
+						2,
+						3,
+						0,
+						1,
+						4
+					],
+					"outputs": [
+						5,
+						6
+					]
 				}
 			],
 			
-			"color": 0,
-			"dir": 1
+			"color": 5,
+			"dir": 6
 		}
 	],
 	
