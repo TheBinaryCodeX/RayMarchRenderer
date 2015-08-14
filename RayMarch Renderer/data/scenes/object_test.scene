@@ -49,7 +49,7 @@
 					]
 				},
 				{
-					"name": "node_facing",
+					"name": "misc_facing",
 					"inputs": [
 						
 					],
@@ -124,23 +124,52 @@
 		{
 			"matID": 1,
 			
-			"total_vars": 1,
+			"total_vars": 4,
 			
 			"nodes": [
 				{
 					"name": "map_sphere",
 					"inputs": [
 						-1,
-						[0, 0, 0],
-						[1, 1, 1]
+						[0, 1, 0],
+						[2, 2, 2]
 					],
 					"outputs": [
 						0
 					]
+				},
+				{
+					"name": "math_cosine",
+					"inputs": [
+						-1
+					],
+					"outputs": [
+						1
+					]
+				},
+				{
+					"name": "math_multiply",
+					"inputs": [
+						1,
+						[1, 0, 0]
+					],
+					"outputs": [
+						2
+					]
+				},
+				{
+					"name": "math_add",
+					"inputs": [
+						0,
+						2
+					],
+					"outputs": [
+						3
+					]
 				}
 			],
 			
-			"distance": 0
+			"distance": 3
 		},
 		{
 			"matID": 2,

@@ -86,6 +86,27 @@ float smin(float a, float b, float k)
 	return mix(b, a, h) - k * h * (1.0 - h);
 }
 
+// Math Functions
+void math_add(in vec3 x, in vec3 n, out vec3 y)
+{
+	y = n + x;
+}
+
+void math_multiply(in vec3 x, in vec3 n, out vec3 y)
+{
+	y = n * x;
+}
+
+void math_sine(in vec3 x, out vec3 y)
+{
+	y = sin(x);
+}
+
+void math_cosine(in vec3 x, out vec3 y)
+{
+	y = cos(x);
+}
+
 // Map Functions
 void map_sphere(in vec3 p, in vec3 centre, in vec3 radius, out vec3 d)
 {

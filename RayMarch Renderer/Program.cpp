@@ -94,7 +94,7 @@ int main()
 	
 	CLI::Init();
 
-	int samples = 8192;
+	int samples = 128;
 	int currentSample = 0;
 
 	int gridWidth = 4;
@@ -111,7 +111,7 @@ int main()
 	int lastSquaresPassed = 0;
 	int distCount = 0;
 
-	bool willSave = true;
+	bool willSave = false;
 	bool saved = false;
 
 	bool willReload = false;
@@ -167,7 +167,7 @@ int main()
 
 					currentSample++;
 					
-					std::cout << currentSample << "/" << samples << std::endl;
+					//std::cout << currentSample << "/" << samples << std::endl;
 				}
 				else
 				{
