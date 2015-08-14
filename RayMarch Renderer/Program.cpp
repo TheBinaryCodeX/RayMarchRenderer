@@ -88,7 +88,6 @@ int main()
 	sf::Window window(sf::VideoMode(Screen::getScreenSize().x, Screen::getScreenSize().y, 32), "RayMarch Renderer", sf::Style::Titlebar | sf::Style::Close);
 
 	Graphics::Init();
-	Graphics::Reload();
 
 	Camera camera = Camera(Vector3(0, 4, -8), Vector3(0, -4, 8).normalized(), Screen::getScreenSize().x / Screen::getScreenSize().y, PI / 4);
 	

@@ -96,6 +96,29 @@
 			
 			"color": 0,
 			"dir": -1
+		},
+		{
+			"id": 3,
+		
+			"total_vars": 2,
+		
+			"nodes": [
+				{
+					"name": "shader_refraction",
+					"inputs": [
+						[0.8, 0.8, 0.8],
+						[1.0, 1.0, 1.0],
+						[0.0, 0.0, 0.0]
+					],
+					"outputs": [
+						0,
+						1
+					]
+				}
+			],
+			
+			"color": 0,
+			"dir": 1
 		}
 	],
 	
@@ -122,7 +145,7 @@
 			"distance": 0
 		},
 		{
-			"matID": 1,
+			"matID": 3,
 			
 			"total_vars": 4,
 			
@@ -131,45 +154,16 @@
 					"name": "map_sphere",
 					"inputs": [
 						-1,
-						[0, 1, 0],
+						[0, 1.1, 0],
 						[2, 2, 2]
 					],
 					"outputs": [
 						0
 					]
-				},
-				{
-					"name": "math_cosine",
-					"inputs": [
-						-1
-					],
-					"outputs": [
-						1
-					]
-				},
-				{
-					"name": "math_multiply",
-					"inputs": [
-						1,
-						[1, 0, 0]
-					],
-					"outputs": [
-						2
-					]
-				},
-				{
-					"name": "math_add",
-					"inputs": [
-						0,
-						2
-					],
-					"outputs": [
-						3
-					]
 				}
 			],
 			
-			"distance": 3
+			"distance": 0
 		},
 		{
 			"matID": 2,

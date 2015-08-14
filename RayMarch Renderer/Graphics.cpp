@@ -11,6 +11,8 @@ std::vector<std::string> objLines;
 
 GLuint Graphics::loadShader(GLenum type, std::string path)
 {
+	clock_t t = clock();
+
 	std::string content;
 	std::ifstream fileStream(path, std::ios::in);
 
@@ -182,6 +184,9 @@ GLuint Graphics::loadShader(GLenum type, std::string path)
 	glShaderSource(shader, 1, &src, NULL);
 	glCompileShader(shader);
 
+	float time = (double)(clock() - t) / (double)CLOCKS_PER_SEC;
+	//std::cout << "Compile Time: " << time << std::endl;
+
 	GLint status;
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
 
@@ -286,7 +291,9 @@ void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint pass
 	glUniform1f(glGetUniformLocation(rayTrace.program, "time"), currentTime);
 
 	glUniform1i(glGetUniformLocation(rayTrace.program, "useEnvTex"), 1);
-	glUniform1i(glGetUniformLocation(rayTrace.program, "envTex"), 0);
+	glUniform1i(glGetUniformLocation(rayTrace.program, "envTex"), 0); 
+
+	glUniform1i(glGetUniformLocation(rayTrace.program, "separateChannels"), 0);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, envTex);
@@ -435,11 +442,6 @@ void Graphics::Reload()
 		objLines.push_back(std::string("d = vars[") + std::to_string(obj["distance"].asInt()) + "];");
 
 		objLines.push_back("}");
-	}
-
-	for (int i = 0; i < objLines.size(); i++)
-	{
-		std::cout << objLines[i] << std::endl;
 	}
 
 	rayTrace.DeleteCompute();
