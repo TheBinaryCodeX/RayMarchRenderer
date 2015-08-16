@@ -102,8 +102,8 @@ int main()
 	int chunkWidth = Screen::getScreenSize().x / gridWidth;
 	int chunkHeight = Screen::getScreenSize().y / gridHeight;
 
-	int x = gridWidth / 2 - 1;
-	int y = gridHeight / 2 - 1;
+	int x = ceil((float)gridWidth / 2.0) - 1;
+	int y = ceil((float)gridHeight / 2.0) - 1;
 	Vector2 dir = Vector2(-1, 0);
 
 	int squaresPassed = 0;
@@ -111,9 +111,6 @@ int main()
 	int distCount = 0;
 
 	bool willSave = false;
-	bool saved = false;
-
-	bool willReload = false;
 
 	bool rendering = false;
 
@@ -140,8 +137,8 @@ int main()
 			// Reload
 			if (rendering)
 			{
-				x = gridWidth / 2 - 1;
-				y = gridHeight / 2 - 1;
+				x = ceil((float)gridWidth / 2.0) - 1;
+				y = ceil((float)gridHeight / 2.0) - 1;
 				dir = Vector2(-1, 0);
 
 				squaresPassed = 0;
@@ -151,8 +148,6 @@ int main()
 				Graphics::Reload();
 
 				camera.calculateRays();
-
-				willReload = false;
 			}
 		}
 		else
@@ -161,7 +156,10 @@ int main()
 			{
 				if (currentSample < samples)
 				{
-					Graphics::Render(newTime, Vector2(x * chunkWidth, y * chunkHeight), Vector2((x + 1) * chunkWidth, (y + 1) * chunkHeight), samples, currentSample, Vector2(chunkWidth, chunkHeight));
+					Vector2 min = Vector2(x * chunkWidth, y * chunkHeight);
+					Vector2 max = Vector2((x + 1) * chunkWidth, (y + 1) * chunkHeight);
+
+					Graphics::Render(newTime, min, max, samples, currentSample);
 					window.display();
 
 					currentSample++;
@@ -196,10 +194,10 @@ int main()
 			}
 			else
 			{
-				if (willSave && !saved)
+				if (willSave)
 				{
 					save();
-					saved = true;
+					willSave = false;
 				}
 
 				rendering = false;

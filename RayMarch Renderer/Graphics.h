@@ -125,7 +125,7 @@ public:
 
 public:
 	static void Init();
-	static void Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint passes, GLuint currentPass, Vector2 chunkSize);
+	static void Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint passes, GLuint currentPass);
 	static void Reload();
 
 	static void SaveImage(std::string path);

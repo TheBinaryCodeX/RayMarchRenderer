@@ -9,7 +9,6 @@ uniform sampler2D tex;
 uniform vec2 screenSize;
 
 uniform vec4 bounds;
-uniform vec2 chunkSize;
 
 uniform int passes;
 uniform int currentPass;

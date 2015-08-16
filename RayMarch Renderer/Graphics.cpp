@@ -273,7 +273,7 @@ int nextPowerOfTwo(int x)
 	return x;
 }
 
-void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint passes, GLuint currentPass, Vector2 chunkSize)
+void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint passes, GLuint currentPass)
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -313,7 +313,6 @@ void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint pass
 	glUniform2f(glGetUniformLocation(fullQuad.program, "screenSize"), Screen::getScreenSize().x, Screen::getScreenSize().y);
 
 	glUniform4f(glGetUniformLocation(fullQuad.program, "bounds"), min.x, min.y, max.x, max.y);
-	glUniform2f(glGetUniformLocation(fullQuad.program, "chunkSize"), chunkSize.x, chunkSize.y);
 
 	glUniform1i(glGetUniformLocation(fullQuad.program, "passes"), passes);
 	glUniform1i(glGetUniformLocation(fullQuad.program, "currentPass"), currentPass);

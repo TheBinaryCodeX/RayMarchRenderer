@@ -10,7 +10,7 @@
 					"name": "shader_emission",
 					"inputs": [
 						[1.0, 1.0, 1.0],
-						[10, 10, 10]
+						[16, 16, 16]
 					],
 					"outputs": [
 						0
