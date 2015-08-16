@@ -90,8 +90,6 @@ int main()
 	Graphics::Init();
 
 	Camera camera = Camera(Vector3(0, 4, -8), Vector3(0, -4, 8).normalized(), Screen::getScreenSize().x / Screen::getScreenSize().y, PI / 4);
-	
-	CLI::Init();
 
 	int samples = 128;
 	int currentSample = 0;
@@ -113,6 +111,8 @@ int main()
 	bool willSave = false;
 
 	bool rendering = false;
+
+	CLI::Init(&samples, &gridWidth, &gridHeight);
 
 	double oldTime = 0;
 	double newTime = 0;
