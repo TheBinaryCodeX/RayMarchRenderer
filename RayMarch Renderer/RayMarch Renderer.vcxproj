@@ -52,13 +52,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\jsoncpp-master\include;C:\SFML\include;C:\OpenGL\Simple OpenGL Image Library\src;C:\OpenGL\glm\glm;C:\OpenGL\glew-1.10.0\include;C:\OpenGL\glfw-3.0.4.bin.WIN32\include;C:\OpenGL\freeglut\include;C:\FreeType\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\SFGUI-0.3.0\include;C:\jsoncpp-master\include;C:\SFML-2.3\include;C:\OpenGL\Simple OpenGL Image Library\src;C:\OpenGL\glm\glm;C:\OpenGL\glew-1.10.0\include;C:\OpenGL\glfw-3.0.4.bin.WIN32\include;C:\OpenGL\freeglut\include;C:\FreeType\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\jsoncpp-master\lib\Debug;C:\SFML\Libs\Debug;C:\OpenGL\Simple OpenGL Image Library\lib;C:\OpenGL\glew-1.10.0\lib\Release\Win32;C:\OpenGL\glfw-3.0.4.bin.WIN32\lib-msvc120;C:\OpenGL\freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glfw3.lib;glew32.lib;opengl32.lib;SOIL.lib;sfml-system-d.lib;sfml-window-d.lib;jsoncpp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\SFGUI-0.3.0\build\lib\Debug;C:\jsoncpp-master\lib\Debug;C:\SFML-2.3\lib;C:\OpenGL\Simple OpenGL Image Library\lib;C:\OpenGL\glew-1.10.0\lib\Release\Win32;C:\OpenGL\glfw-3.0.4.bin.WIN32\lib-msvc120;C:\OpenGL\freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;glew32.lib;opengl32.lib;SOIL.lib;sfml-system-d.lib;sfml-window-d.lib;sfml-graphics-d.lib;sfgui-d.lib;jsoncpp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>
@@ -71,15 +71,15 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\jsoncpp-master\include;C:\SFML\include;C:\OpenGL\Simple OpenGL Image Library\src;C:\OpenGL\glm\glm;C:\OpenGL\glew-1.10.0\include;C:\OpenGL\glfw-3.0.4.bin.WIN32\include;C:\OpenGL\freeglut\include;C:\FreeType\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\SFGUI-0.3.0\include;C:\jsoncpp-master\include;C:\SFML-2.3\include;C:\OpenGL\Simple OpenGL Image Library\src;C:\OpenGL\glm\glm;C:\OpenGL\glew-1.10.0\include;C:\OpenGL\glfw-3.0.4.bin.WIN32\include;C:\OpenGL\freeglut\include;C:\FreeType\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>C:\jsoncpp-master\lib\Release;C:\SFML\Libs\Debug;C:\OpenGL\Simple OpenGL Image Library\lib;C:\OpenGL\glew-1.10.0\lib\Release\Win32;C:\OpenGL\glfw-3.0.4.bin.WIN32\lib-msvc120;C:\OpenGL\freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glfw3.lib;glew32.lib;opengl32.lib;SOIL.lib;sfml-system-d.lib;sfml-window-d.lib;jsoncpp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\SFGUI-0.3.0\build\lib\Release;C:\jsoncpp-master\lib\Release;C:\SFML-2.3\lib;C:\OpenGL\Simple OpenGL Image Library\lib;C:\OpenGL\glew-1.10.0\lib\Release\Win32;C:\OpenGL\glfw-3.0.4.bin.WIN32\lib-msvc120;C:\OpenGL\freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;glew32.lib;opengl32.lib;SOIL.lib;sfml-system-d.lib;sfml-window-d.lib;sfml-graphics-d.lib;sfgui-d.lib;jsoncpp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>

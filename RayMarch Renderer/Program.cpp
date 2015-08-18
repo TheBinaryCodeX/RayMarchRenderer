@@ -23,6 +23,10 @@
 #include <SFML/Window/Keyboard.hpp>
 #include <SFML/Window/Mouse.hpp>
 #include <SFML/Window.hpp>
+#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFGUI/SFGUI.hpp>
+#include <SFGUI/Widgets.hpp>
+#include <SFML/Graphics.hpp>
 #include "stdafx.h"
 
 #define GLEW_STATIC
@@ -148,6 +152,8 @@ int main()
 				Graphics::Reload();
 
 				camera.calculateRays();
+
+				window.requestFocus();
 			}
 		}
 		else
@@ -163,7 +169,7 @@ int main()
 					window.display();
 
 					currentSample++;
-					
+
 					//std::cout << currentSample << "/" << samples << std::endl;
 				}
 				else
@@ -202,11 +208,11 @@ int main()
 
 				rendering = false;
 			}
-
-			oldTime = newTime;
-			newTime = (double)(clock() - t) / (double)CLOCKS_PER_SEC;
-			Screen::setDeltaTime(newTime - oldTime);
 		}
+
+		oldTime = newTime;
+		newTime = (double)(clock() - t) / (double)CLOCKS_PER_SEC;
+		Screen::setDeltaTime(newTime - oldTime);
 	}
 
 	//Graphics::Cleanup();
