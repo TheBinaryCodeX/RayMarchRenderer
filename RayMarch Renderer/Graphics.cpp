@@ -273,7 +273,7 @@ int nextPowerOfTwo(int x)
 	return x;
 }
 
-void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint passes, GLuint currentPass)
+void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint currentSample, GLboolean drawBox)
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -284,7 +284,7 @@ void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint pass
 	// Compute
 	glUseProgram(rayTrace.program);
 
-	glUniform1i(glGetUniformLocation(rayTrace.program, "passes"), passes);
+	glUniform1i(glGetUniformLocation(rayTrace.program, "currentSample"), currentSample);
 
 	glUniform4f(glGetUniformLocation(rayTrace.program, "bounds"), min.x, min.y, max.x, max.y);
 
@@ -314,8 +314,9 @@ void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint pass
 
 	glUniform4f(glGetUniformLocation(fullQuad.program, "bounds"), min.x, min.y, max.x, max.y);
 
-	glUniform1i(glGetUniformLocation(fullQuad.program, "passes"), passes);
-	glUniform1i(glGetUniformLocation(fullQuad.program, "currentPass"), currentPass);
+	glUniform1i(glGetUniformLocation(fullQuad.program, "currentSample"), currentSample);
+
+	glUniform1i(glGetUniformLocation(fullQuad.program, "drawBox"), (int)drawBox);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, framebuffer.color);

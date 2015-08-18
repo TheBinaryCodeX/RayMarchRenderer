@@ -186,7 +186,7 @@ void CLI::Init(int* samples_p, int* gridWidth_p, int* gridHeight_p)
 	gridHeight = gridHeight_p;
 }
 
-void CLI::CheckInput(bool& rendering)
+void CLI::CheckInput(bool& rendering, bool& willSave)
 {
 	std::string input;
 	std::cin >> input;
@@ -210,5 +210,9 @@ void CLI::CheckInput(bool& rendering)
 	else if (input == "render")
 	{
 		rendering = true;
+	}
+	else if (input == "save")
+	{
+		willSave = true;
 	}
 }

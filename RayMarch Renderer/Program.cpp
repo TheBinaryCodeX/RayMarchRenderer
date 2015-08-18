@@ -136,7 +136,14 @@ int main()
 
 		if (!rendering)
 		{
-			CLI::CheckInput(rendering);
+			CLI::CheckInput(rendering, willSave);
+
+			// Save
+			if (willSave)
+			{
+				save();
+				willSave = false;
+			}
 
 			// Reload
 			if (rendering)
@@ -158,22 +165,25 @@ int main()
 		}
 		else
 		{
-			if (squaresPassed < gridWidth * gridHeight)
+			if (samples == 0)
 			{
-				if (currentSample < samples)
+				if (squaresPassed < gridWidth * gridHeight)
 				{
+					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+					{
+						rendering = false;
+					}
+
+					bool drawBox = rendering;
+
 					Vector2 min = Vector2(x * chunkWidth, y * chunkHeight);
 					Vector2 max = Vector2((x + 1) * chunkWidth, (y + 1) * chunkHeight);
 
-					Graphics::Render(newTime, min, max, samples, currentSample);
+					Graphics::Render(newTime, min, max, currentSample, drawBox);
 					window.display();
 
-					currentSample++;
+					std::cout << currentSample << std::endl;
 
-					//std::cout << currentSample << "/" << samples << std::endl;
-				}
-				else
-				{
 					x -= gridWidth / 2;
 					y -= gridHeight / 2;
 
@@ -194,19 +204,83 @@ int main()
 
 					x += gridWidth / 2;
 					y += gridHeight / 2;
+				}
+				else
+				{
+					x = ceil((float)gridWidth / 2.0) - 1;
+					y = ceil((float)gridHeight / 2.0) - 1;
+					dir = Vector2(-1, 0);
 
-					currentSample = 0;
+					squaresPassed = 0;
+					lastSquaresPassed = 0;
+					distCount = 0;
+
+					currentSample++;
 				}
 			}
 			else
 			{
-				if (willSave)
+				if (squaresPassed < gridWidth * gridHeight)
 				{
-					save();
-					willSave = false;
-				}
+					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+					{
+						rendering = false;
+					}
 
-				rendering = false;
+					if (currentSample < samples)
+					{
+						bool drawBox = true;
+						if (currentSample == samples - 1 || !rendering)
+						{
+							drawBox = false;
+						}
+
+						Vector2 min = Vector2(x * chunkWidth, y * chunkHeight);
+						Vector2 max = Vector2((x + 1) * chunkWidth, (y + 1) * chunkHeight);
+
+						Graphics::Render(newTime, min, max, currentSample, drawBox);
+						window.display();
+
+						currentSample++;
+
+						//std::cout << currentSample << "/" << samples << std::endl;
+					}
+					else
+					{
+						x -= gridWidth / 2;
+						y -= gridHeight / 2;
+
+						if (distCount * 2 == squaresPassed - lastSquaresPassed)
+						{
+							distCount++;
+							lastSquaresPassed = squaresPassed;
+							dir = Vector2(dir.y, -dir.x);
+						}
+						else if (distCount == squaresPassed - lastSquaresPassed)
+						{
+							dir = Vector2(dir.y, -dir.x);
+						}
+						squaresPassed++;
+
+						x += dir.x;
+						y += dir.y;
+
+						x += gridWidth / 2;
+						y += gridHeight / 2;
+
+						currentSample = 0;
+					}
+				}
+				else
+				{
+					if (willSave)
+					{
+						save();
+						willSave = false;
+					}
+
+					rendering = false;
+				}
 			}
 		}
 

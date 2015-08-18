@@ -4,6 +4,6 @@ class CLI
 {
 public:
 	static void Init(int* samples_p, int* gridWidth_p, int* gridHeight_p);
-	static void CheckInput(bool& rendering);
+	static void CheckInput(bool& rendering, bool& willSave);
 };
 

@@ -10,8 +10,9 @@ uniform vec2 screenSize;
 
 uniform vec4 bounds;
 
-uniform int passes;
-uniform int currentPass;
+uniform int currentSample;
+
+uniform int drawBox;
 
 void main()
 {
@@ -20,12 +21,7 @@ void main()
 
 	vec2 pix = UV * screenSize;
 
-	if (pix.x >= bounds.x && pix.x <= bounds.z && pix.y >= bounds.y && pix.y <= bounds.w)
-	{
-		color.rgb *= 1.0 / ((1.0 / passes) * (currentPass + 1));
-	}
-
-	if (currentPass < passes - 2)
+	if (drawBox != 0)
 	{
 		if (pix.x - bounds.x <= 0.5 && pix.x - bounds.x >= -0.5 && pix.y >= bounds.y && pix.y <= bounds.w && (length(pix - bounds.xy) <= 8 || length(pix - bounds.xw) <= 8))
 		{

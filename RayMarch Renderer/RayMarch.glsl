@@ -13,7 +13,7 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 const float maxDist = 1000;
 int maxSteps = 512;
 
-uniform int passes;
+uniform int currentSample;
 
 uniform vec4 bounds;
 
@@ -419,8 +419,17 @@ void main()
 		color = r + g + b;
 	}
 
-	vec4 old = imageLoad(framebuffer, pix);
+	if (currentSample != 0)
+	{
+		vec4 old = imageLoad(framebuffer, pix);
 
-	float fact = 1.0 / float(passes);
-	imageStore(framebuffer, pix, vec4(color * fact + old.rgb, 1));
+		float f1 = 1.0 / float(currentSample + 1);
+		float f2 = float(currentSample) / float(currentSample + 1);
+
+		imageStore(framebuffer, pix, vec4(color * f1 + old.rgb * f2, 1));
+	}
+	else
+	{
+		imageStore(framebuffer, pix, vec4(color, 1));
+	}
 }
