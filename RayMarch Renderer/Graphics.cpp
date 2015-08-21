@@ -290,7 +290,7 @@ void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint curr
 
 	glUniform1f(glGetUniformLocation(rayTrace.program, "time"), currentTime);
 
-	glUniform1i(glGetUniformLocation(rayTrace.program, "useEnvTex"), 1);
+	glUniform1i(glGetUniformLocation(rayTrace.program, "useEnvTex"), 0);
 	glUniform1i(glGetUniformLocation(rayTrace.program, "envTex"), 0); 
 
 	glUniform1i(glGetUniformLocation(rayTrace.program, "separateChannels"), 0);

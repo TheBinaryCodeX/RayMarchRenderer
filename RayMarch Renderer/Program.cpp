@@ -93,7 +93,7 @@ int main()
 
 	Graphics::Init();
 
-	Camera camera = Camera(Vector3(0, 4, -8), Vector3(0, -4, 8).normalized(), Screen::getScreenSize().x / Screen::getScreenSize().y, PI / 4);
+	Camera camera = Camera(Vector3(0, 4, -6), Vector3(0, -4, 6).normalized(), Screen::getScreenSize().x / Screen::getScreenSize().y, PI / 4);
 
 	int samples = 128;
 	int currentSample = 0;

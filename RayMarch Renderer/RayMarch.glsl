@@ -36,14 +36,21 @@ struct RayData
 	float t;
 };
 
+float randChange = 0;
 highp float rand(vec2 co)
 {
+	co += (gl_GlobalInvocationID.xy + vec2(time)) * randChange;
+	//co += vec2(time);
+
 	highp float a = 12.9898;
 	highp float b = 78.233;
 	highp float c = 43758.5453;
 	highp float dt = dot(co.xy, vec2(a, b));
 	highp float sn = mod(dt, 3.14);
-	return fract(sin(sn) * c);
+
+	randChange = fract(sin(sn) * c);
+
+	return randChange;
 }
 
 vec3 skyColor(vec3 dir)
@@ -124,17 +131,17 @@ void map_box(in vec3 p, in vec3 centre, in vec3 radius, out vec3 d)
 }
 
 // Operator Functions
-void op_union(in float a, in float b, out float c)
+void op_union(in vec3 a, in vec3 b, out vec3 c)
 {
 	c = min(a, b);
 }
 
-void op_subtract(in float a, in float b, out float c)
+void op_subtract(in vec3 a, in vec3 b, out vec3 c)
 {
 	c = max(a, -b);
 }
 
-void op_intersect(in float a, in float b, out float c)
+void op_intersect(in vec3 a, in vec3 b, out vec3 c)
 {
 	c = max(a, b);
 }
@@ -211,7 +218,7 @@ vec3 getNormal(vec3 p)
 	return normalize(n);
 }
 
-vec3 randHemisphere(vec2 randSeed1, vec2 randSeed2, vec3 dir, vec3 normal)
+vec3 randHemisphere(vec2 randSeed1, vec2 randSeed2, vec3 normal)
 {
 	float theta = 2 * 3.141592653 * rand(randSeed1);
 	float phi = acos(2 * rand(randSeed2) - 1);
@@ -269,6 +276,16 @@ void shader_mix(in RayData ray, in vec3 inColor1, in vec3 inDir1, in vec3 inColo
 		outColor = inColor1;
 		outDir = inDir1;
 	}
+	if (grayscale(inFactor * channels) == 0)
+	{
+		outColor = inColor1;
+		outDir = inDir1;
+	}
+	else if (grayscale(inFactor * channels) == 1)
+	{
+		outColor = inColor2;
+		outDir = inDir2;
+	}
 }
 
 void shader_diffuse(in RayData ray, in vec3 inColor, out vec3 outColor, out vec3 outDir)
@@ -277,9 +294,9 @@ void shader_diffuse(in RayData ray, in vec3 inColor, out vec3 outColor, out vec3
 	outColor = inColor;
 
 	// Direction
-	vec2 rs1 = ray.hit.xy + vec2(time);
-	vec2 rs2 = ray.hit.zx + vec2(time);
-	outDir = randHemisphere(rs1, rs2, ray.dir, getNormal(ray.hit));
+	vec2 rs1 = ray.hit.xy;// +vec2(time);
+	vec2 rs2 = ray.hit.zx;// +vec2(time);
+	outDir = randHemisphere(rs1, rs2, getNormal(ray.hit));
 }
 
 void shader_glossy(in RayData ray, in vec3 inColor, in vec3 inRoughness, out vec3 outColor, out vec3 outDir)
@@ -288,9 +305,9 @@ void shader_glossy(in RayData ray, in vec3 inColor, in vec3 inRoughness, out vec
 	outColor = inColor;
 
 	// Direction
-	vec2 rs1 = ray.hit.yx + vec2(time);
-	vec2 rs2 = ray.hit.xz + vec2(time);
-	outDir = mix(randHemisphere(rs1, rs2, ray.dir, getNormal(ray.hit)), reflect(ray.dir, getNormal(ray.hit)), 1.0 - grayscale(inRoughness * channels));
+	vec2 rs1 = ray.hit.yx;// +vec2(time);
+	vec2 rs2 = ray.hit.xz;// +vec2(time);
+	outDir = mix(randHemisphere(rs1, rs2, getNormal(ray.hit)), reflect(ray.dir, getNormal(ray.hit)), 1.0 - grayscale(inRoughness * channels));
 }
 
 vec3 newHit;
@@ -306,11 +323,11 @@ void shader_refraction(inout RayData ray, in vec3 inColor, in vec3 inIOR, in vec
 
 	newHit = ray.hit + v.x * dir;
 
-	vec2 rs1 = ray.hit.zy + vec2(time);
-	vec2 rs2 = ray.hit.yz + vec2(time);
+	vec2 rs1 = ray.hit.zy;// +vec2(time);
+	vec2 rs2 = ray.hit.yz;// +vec2(time);
 
 	vec3 rDir = normalize(refract(dir, -getNormal(newHit), grayscale(inIOR * channels)));
-	vec3 dDir = randHemisphere(rs1, rs2, ray.dir, getNormal(newHit));
+	vec3 dDir = randHemisphere(rs1, rs2, getNormal(newHit));
 
 	outDir = mix(dDir, rDir, 1.0 - grayscale(inRoughness * channels));
 
