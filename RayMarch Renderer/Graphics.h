@@ -132,6 +132,7 @@ public:
 
 	static void addMaterial(Json::Value material);
 	static void addObject(Json::Value object);
+	static void clearScene();
 
 	static void setView(Vector3 eye, Vector3 ray00, Vector3 ray01, Vector3 ray10, Vector3 ray11);
 };

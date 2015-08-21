@@ -95,7 +95,7 @@ int main()
 
 	Camera camera = Camera(Vector3(0, 4, -6), Vector3(0, -4, 6).normalized(), Screen::getScreenSize().x / Screen::getScreenSize().y, PI / 4);
 
-	int samples = 128;
+	int samples = 0;
 	int currentSample = 0;
 
 	int gridWidth = 4;

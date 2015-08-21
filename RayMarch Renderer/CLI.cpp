@@ -79,6 +79,7 @@ Json::Value loadJson(std::string path)
 
 void addScene(Json::Value scene)
 {
+	Graphics::clearScene();
 	for (int i = 0; i < scene["materials"].size(); i++)
 	{
 		Graphics::addMaterial(scene["materials"][i]);

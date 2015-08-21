@@ -290,7 +290,7 @@ void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint curr
 
 	glUniform1f(glGetUniformLocation(rayTrace.program, "time"), currentTime);
 
-	glUniform1i(glGetUniformLocation(rayTrace.program, "useEnvTex"), 0);
+	glUniform1i(glGetUniformLocation(rayTrace.program, "useEnvTex"), 1);
 	glUniform1i(glGetUniformLocation(rayTrace.program, "envTex"), 0); 
 
 	glUniform1i(glGetUniformLocation(rayTrace.program, "separateChannels"), 0);
@@ -478,6 +478,12 @@ void Graphics::addMaterial(Json::Value material)
 void Graphics::addObject(Json::Value object)
 {
 	objects.push_back(object);
+}
+
+void Graphics::clearScene()
+{
+	materials.clear();
+	objects.clear();
 }
 
 void Graphics::setView(Vector3 eye, Vector3 ray00, Vector3 ray01, Vector3 ray10, Vector3 ray11)
