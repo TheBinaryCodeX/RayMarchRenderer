@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "Graphics.h"
-#include "SFML\Window.hpp"
 #include "SOIL.h"
+
+Vector2 imageSize = Vector2(800, 600);
 
 std::vector<Json::Value> materials;
 std::vector<Json::Value> objects;
@@ -212,14 +213,17 @@ Graphics::Framebuffer framebuffer;
 GLuint envTex;
 
 GLuint fqVAO;
-void createFQ()
+void createFQ(Vector2 centre, GLfloat zoom)
 {
+	float halfWidth = (imageSize.x / 2) * zoom;
+	float halfHeight = (imageSize.y / 2) * zoom;
+
 	std::vector<GLfloat> vertexData = std::vector<GLfloat>
 	{
-		-1.0f, 1.0f, 0.0f, 0.0f,
-		1.0f, 1.0f, 1.0f, 0.0f,
-		1.0f, -1.0f, 1.0f, 1.0f,
-		-1.0f, -1.0f, 0.0f, 1.0f
+		(float)centre.x - halfWidth, (float)centre.y - halfHeight, 0.0f, 0.0f,
+		(float)centre.x + halfWidth, (float)centre.y - halfHeight, 1.0f, 0.0f,
+		(float)centre.x + halfWidth, (float)centre.y + halfHeight, 1.0f, 1.0f,
+		(float)centre.x - halfWidth, (float)centre.y + halfHeight, 0.0f, 1.0f
 	};
 
 	glGenVertexArrays(1, &fqVAO);
@@ -230,13 +234,16 @@ void createFQ()
 	glBindBuffer(GL_ARRAY_BUFFER, fqVBO);
 	glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), &vertexData[0], GL_STATIC_DRAW);
 
-	GLint posAttrib = glGetAttribLocation(fullQuad.program, "pos");
+	GLint posAttrib = 0;// glGetAttribLocation(fullQuad.program, "pos");
 	glEnableVertexAttribArray(posAttrib);
 	glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
 
-	GLint uvAttrib = glGetAttribLocation(fullQuad.program, "uv");
+	GLint uvAttrib = 1;// glGetAttribLocation(fullQuad.program, "uv");
 	glEnableVertexAttribArray(uvAttrib);
 	glVertexAttribPointer(uvAttrib, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)(2 * sizeof(float)));
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
 }
 
 void Graphics::Init()
@@ -250,15 +257,14 @@ void Graphics::Init()
 	fullQuad.Create("FullQuad");
 	rayTrace.CreateCompute("RayMarch");
 
-	framebuffer.Create();
-
-	createFQ();
+	framebuffer.Create(imageSize);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.buffer);
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	envTex = SOIL_load_OGL_texture("data\\textures\\environment_texture_test.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
+	envTex = SOIL_load_OGL_texture("data\\textures\\skybox.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
 }
 
 int nextPowerOfTwo(int x) 
@@ -273,14 +279,8 @@ int nextPowerOfTwo(int x)
 	return x;
 }
 
-void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint currentSample, GLboolean drawBox)
+void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint currentSample)
 {
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
 	// Compute
 	glUseProgram(rayTrace.program);
 
@@ -302,9 +302,20 @@ void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint curr
 
 	glDispatchCompute(nextPowerOfTwo(ceil(min.x / 8 + max.x / 8)), nextPowerOfTwo(ceil(min.y / 8 + max.y / 8)), 1);
 
-	glEnable(GL_FRAMEBUFFER_SRGB);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glUseProgram(0);
+}
+
+void Graphics::Display(Vector2 centre, GLfloat zoom, Vector2 min, Vector2 max)
+{
+	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	//glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	//glClear(GL_COLOR_BUFFER_BIT);
 
 	// Draw
+	glEnable(GL_FRAMEBUFFER_SRGB);
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glUseProgram(fullQuad.program);
 
@@ -314,15 +325,22 @@ void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint curr
 
 	glUniform4f(glGetUniformLocation(fullQuad.program, "bounds"), min.x, min.y, max.x, max.y);
 
-	glUniform1i(glGetUniformLocation(fullQuad.program, "currentSample"), currentSample);
-
-	glUniform1i(glGetUniformLocation(fullQuad.program, "drawBox"), (int)drawBox);
-
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, framebuffer.color);
 
+	createFQ(centre, zoom);
+
 	glBindVertexArray(fqVAO);
 	glDrawArrays(GL_QUADS, 0, 4);
+
+	glBindVertexArray(0);
+	glDeleteVertexArrays(1, &fqVAO);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glUseProgram(0);
+
+	sf::Texture::bind(0);
 
 	glDisable(GL_FRAMEBUFFER_SRGB);
 }
@@ -447,9 +465,14 @@ void Graphics::Reload()
 	rayTrace.DeleteCompute();
 	rayTrace.CreateCompute("RayMarch");
 
+	framebuffer.Delete();
+	framebuffer.Create(imageSize);
+
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.buffer);
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void Graphics::SaveImage(std::string path)
@@ -484,6 +507,11 @@ void Graphics::clearScene()
 {
 	materials.clear();
 	objects.clear();
+}
+
+void Graphics::setImageSize(Vector2 size)
+{
+	imageSize = size;
 }
 
 void Graphics::setView(Vector3 eye, Vector3 ray00, Vector3 ray01, Vector3 ray10, Vector3 ray11)

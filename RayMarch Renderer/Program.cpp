@@ -6,6 +6,7 @@
 #include "Graphics.h"
 #include "Camera.h"
 #include "CLI.h"
+#include "GUI.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <GL/gl.h>
@@ -83,19 +84,35 @@ void save()
 	std::cout << "Saved image as: " << name << std::endl;
 }
 
+int samples = 128;
+
+bool rendering = false;
+bool reload = false;
+
+std::shared_ptr<sfg::Button> button;
+void OnClick()
+{
+	button->SetLabel("World");
+}
+
 int main()
 {
 	OpenConsole();
 
 	Screen::setScreenSize(Vector2(1280, 720));
 
-	sf::Window window(sf::VideoMode(Screen::getScreenSize().x, Screen::getScreenSize().y, 32), "RayMarch Renderer", sf::Style::Titlebar | sf::Style::Close);
+	sf::RenderWindow renderWindow(sf::VideoMode(Screen::getScreenSize().x, Screen::getScreenSize().y, 32), "RayMarch Renderer", sf::Style::Titlebar | sf::Style::Close);
+	renderWindow.setActive();
 
+	GUI gui = GUI(&renderWindow);
+
+	renderWindow.resetGLStates();
+
+	Graphics::setImageSize(Vector2(1280, 720));
 	Graphics::Init();
 
-	Camera camera = Camera(Vector3(0, 4, -6), Vector3(0, -4, 6).normalized(), Screen::getScreenSize().x / Screen::getScreenSize().y, PI / 4);
+	Camera camera = Camera(Vector3(0, 4, -8), Vector3(0, -4, 8).normalized(), Screen::getScreenSize().x / Screen::getScreenSize().y, PI / 4);
 
-	int samples = 0;
 	int currentSample = 0;
 
 	int gridWidth = 4;
@@ -114,29 +131,49 @@ int main()
 
 	bool willSave = false;
 
-	bool rendering = false;
+	//bool rendering = false;
 
 	CLI::Init(&samples, &gridWidth, &gridHeight);
 
 	double oldTime = 0;
 	double newTime = 0;
 	clock_t t = clock();
-	while (window.isOpen())
+	while (renderWindow.isOpen())
 	{
 		sf::Event windowEvent;
-		while (window.pollEvent(windowEvent))
+		while (renderWindow.pollEvent(windowEvent))
 		{
+			gui.handleEvent(windowEvent);
 			switch (windowEvent.type)
 			{
 			case sf::Event::Closed:
-				window.close();
+				renderWindow.close();
 				break;
 			}
 		}
 
+		if (reload)
+		{
+			x = ceil((float)gridWidth / 2.0) - 1;
+			y = ceil((float)gridHeight / 2.0) - 1;
+			dir = Vector2(-1, 0);
+
+			squaresPassed = 0;
+			lastSquaresPassed = 0;
+			distCount = 0;
+
+			Graphics::Reload();
+
+			camera.calculateRays();
+
+			reload = false;
+		}
+
+		///*
 		if (!rendering)
 		{
-			CLI::CheckInput(rendering, willSave);
+			/*
+			//CLI::CheckInput(rendering, willSave);
 
 			// Save
 			if (willSave)
@@ -160,8 +197,9 @@ int main()
 
 				camera.calculateRays();
 
-				window.requestFocus();
+				renderWindow.requestFocus();
 			}
+			*/
 		}
 		else
 		{
@@ -169,18 +207,10 @@ int main()
 			{
 				if (squaresPassed < gridWidth * gridHeight)
 				{
-					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
-					{
-						rendering = false;
-					}
-
-					bool drawBox = rendering;
-
 					Vector2 min = Vector2(x * chunkWidth, y * chunkHeight);
 					Vector2 max = Vector2((x + 1) * chunkWidth, (y + 1) * chunkHeight);
 
-					Graphics::Render(newTime, min, max, currentSample, drawBox);
-					window.display();
+					Graphics::Render(newTime, min, max, currentSample);
 
 					std::cout << currentSample << std::endl;
 
@@ -229,17 +259,10 @@ int main()
 
 					if (currentSample < samples)
 					{
-						bool drawBox = true;
-						if (currentSample == samples - 1 || !rendering)
-						{
-							drawBox = false;
-						}
-
 						Vector2 min = Vector2(x * chunkWidth, y * chunkHeight);
 						Vector2 max = Vector2((x + 1) * chunkWidth, (y + 1) * chunkHeight);
 
-						Graphics::Render(newTime, min, max, currentSample, drawBox);
-						window.display();
+						Graphics::Render(newTime, min, max, currentSample);
 
 						currentSample++;
 
@@ -283,6 +306,13 @@ int main()
 				}
 			}
 		}
+		//*/
+
+		gui.update(newTime);
+
+		renderWindow.clear();
+		gui.display(renderWindow);
+		renderWindow.display();
 
 		oldTime = newTime;
 		newTime = (double)(clock() - t) / (double)CLOCKS_PER_SEC;

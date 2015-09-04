@@ -402,6 +402,25 @@ vec3 trace(vec3 origin, vec3 dir)
 	return color;
 }
 
+mat3 makeViewMat(vec3 dir)
+{
+	vec3 locZ = dir;
+
+	vec3 locX;
+	if (locZ == vec3(0, 1, 0))
+	{
+		locX = normalize(cross(locZ, vec3(0, 0, 1)));
+	}
+	else
+	{
+		locX = normalize(cross(locZ, vec3(0, 1, 0)));
+	}
+
+	vec3 locY = normalize(cross(locZ, locX));
+
+	return mat3(locX, locY, locZ);
+}
+
 void main()
 {
 	ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
@@ -413,8 +432,8 @@ void main()
 	}
 
 	vec2 pos = vec2(pix) / vec2(size.x, size.y);
-	//vec3 dir = mix(mix(ray00, ray01, pos.x + 0.5 / size.x), mix(ray10, ray11, pos.x), pos.y + 0.5 / size.y);
-	vec3 dir = mix(mix(ray00, ray01, pos.x + rand(pix.xy + vec2(time)) / size.x), mix(ray10, ray11, pos.x), pos.y + rand(pix.yx + vec2(time)) / size.y);
+	//vec3 dir = mix(mix(ray00, ray01, pos.x + 0.5 / size.x), mix(ray10, ray11, pos.x + 0.5 / size.x), pos.y + 0.5 / size.y);
+	vec3 dir = mix(mix(ray00, ray01, pos.x + rand(pix.xy + vec2(time)) / size.x), mix(ray10, ray11, pos.x + rand(pix.xy + vec2(time)) / size.x), pos.y + rand(pix.yx + vec2(time)) / size.y);
 
 	vec3 color;
 	if (separateChannels == 0)

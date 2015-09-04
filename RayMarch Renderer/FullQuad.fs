@@ -1,5 +1,6 @@
 #version 430 core
 
+in vec2 Pos;
 in vec2 UV;
 
 out vec4 outColor;
@@ -10,15 +11,16 @@ uniform vec2 screenSize;
 
 uniform vec4 bounds;
 
-uniform int currentSample;
+//uniform int currentSample;
 
-uniform int drawBox;
+//uniform int drawBox;
 
 void main()
 {
-	vec4 color = texture2D(tex, UV);
+	vec4 color = texture2D(tex, UV * vec2(1, 1));
 	color.a = 1;
 
+	/*
 	vec2 pix = UV * screenSize;
 
 	if (drawBox != 0)
@@ -43,6 +45,14 @@ void main()
 			color = vec4(1, 0.6, 0.1, 0.8);
 		}
 	}
+	*/
 
-	outColor = color;
+	if (Pos.x >= bounds.x && Pos.x <= bounds.z && Pos.y >= bounds.y && Pos.y <= bounds.w)
+	{
+		outColor = color;
+	}
+	else
+	{
+		outColor = vec4(0, 0, 0, 0);
+	}
 }
