@@ -127,6 +127,7 @@ public:
 	static void clearScene();
 
 	static void setImageSize(Vector2 size);
+	static Vector2 getImageSize();
 
 	static void setView(Vector3 eye, Vector3 ray00, Vector3 ray01, Vector3 ray10, Vector3 ray11);
 };

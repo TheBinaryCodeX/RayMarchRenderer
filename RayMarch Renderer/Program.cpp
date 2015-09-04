@@ -84,17 +84,6 @@ void save()
 	std::cout << "Saved image as: " << name << std::endl;
 }
 
-int samples = 128;
-
-bool rendering = false;
-bool reload = false;
-
-std::shared_ptr<sfg::Button> button;
-void OnClick()
-{
-	button->SetLabel("World");
-}
-
 int main()
 {
 	OpenConsole();
@@ -111,15 +100,16 @@ int main()
 	Graphics::setImageSize(Vector2(1280, 720));
 	Graphics::Init();
 
-	Camera camera = Camera(Vector3(0, 4, -8), Vector3(0, -4, 8).normalized(), Screen::getScreenSize().x / Screen::getScreenSize().y, PI / 4);
+	Camera camera = Camera(Vector3(0, 4, -8), Vector3(0, -4, 8).normalized(), Graphics::getImageSize().x / Graphics::getImageSize().y, PI / 4);
 
+	int samples = 128;
 	int currentSample = 0;
 
 	int gridWidth = 4;
 	int gridHeight = 4;
 
-	int chunkWidth = Screen::getScreenSize().x / gridWidth;
-	int chunkHeight = Screen::getScreenSize().y / gridHeight;
+	int chunkWidth = Graphics::getImageSize().x / gridWidth;
+	int chunkHeight = Graphics::getImageSize().y / gridHeight;
 
 	int x = ceil((float)gridWidth / 2.0) - 1;
 	int y = ceil((float)gridHeight / 2.0) - 1;
@@ -131,7 +121,8 @@ int main()
 
 	bool willSave = false;
 
-	//bool rendering = false;
+	bool wasRendering = false;
+	bool rendering = false;
 
 	CLI::Init(&samples, &gridWidth, &gridHeight);
 
@@ -152,8 +143,20 @@ int main()
 			}
 		}
 
-		if (reload)
+		rendering = gui.getRendering();
+
+		if (gui.getReload())
 		{
+			// Reload
+			samples = gui.getSamples();
+			currentSample = 0;
+
+			gridWidth = gui.getGridSize().x;
+			gridHeight = gui.getGridSize().y;
+
+			chunkWidth = Graphics::getImageSize().x / gridWidth;
+			chunkHeight = Graphics::getImageSize().y / gridHeight;
+
 			x = ceil((float)gridWidth / 2.0) - 1;
 			y = ceil((float)gridHeight / 2.0) - 1;
 			dir = Vector2(-1, 0);
@@ -164,49 +167,22 @@ int main()
 
 			Graphics::Reload();
 
+			camera.setAspect(Graphics::getImageSize().x / Graphics::getImageSize().y);
 			camera.calculateRays();
-
-			reload = false;
 		}
 
-		///*
-		if (!rendering)
-		{
-			/*
-			//CLI::CheckInput(rendering, willSave);
-
-			// Save
-			if (willSave)
-			{
-				save();
-				willSave = false;
-			}
-
-			// Reload
-			if (rendering)
-			{
-				x = ceil((float)gridWidth / 2.0) - 1;
-				y = ceil((float)gridHeight / 2.0) - 1;
-				dir = Vector2(-1, 0);
-
-				squaresPassed = 0;
-				lastSquaresPassed = 0;
-				distCount = 0;
-
-				Graphics::Reload();
-
-				camera.calculateRays();
-
-				renderWindow.requestFocus();
-			}
-			*/
-		}
-		else
+		if (rendering)
 		{
 			if (samples == 0)
 			{
 				if (squaresPassed < gridWidth * gridHeight)
 				{
+					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+					{
+						rendering = false;
+						gui.stopRendering();
+					}
+
 					Vector2 min = Vector2(x * chunkWidth, y * chunkHeight);
 					Vector2 max = Vector2((x + 1) * chunkWidth, (y + 1) * chunkHeight);
 
@@ -255,6 +231,7 @@ int main()
 					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
 					{
 						rendering = false;
+						gui.stopRendering();
 					}
 
 					if (currentSample < samples)
@@ -303,6 +280,7 @@ int main()
 					}
 
 					rendering = false;
+					gui.stopRendering();
 				}
 			}
 		}

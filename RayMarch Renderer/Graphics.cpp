@@ -514,6 +514,11 @@ void Graphics::setImageSize(Vector2 size)
 	imageSize = size;
 }
 
+Vector2 Graphics::getImageSize()
+{
+	return imageSize;
+}
+
 void Graphics::setView(Vector3 eye, Vector3 ray00, Vector3 ray01, Vector3 ray10, Vector3 ray11)
 {
 	glUseProgram(rayTrace.program);

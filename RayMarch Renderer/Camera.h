@@ -27,5 +27,7 @@ public:
 	void calculateRays();
 
 	void update(sf::Window& window);
+
+	void setAspect(float newAspect) { aspect = newAspect; };
 };
 

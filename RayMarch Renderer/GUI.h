@@ -7,10 +7,6 @@
 #include <SFGUI/SFGUI.hpp>
 #include <SFGUI/Widgets.hpp>
 
-extern int samples;
-extern bool rendering;
-extern bool reload;
-
 class GUI
 {
 private:
@@ -20,19 +16,37 @@ private:
 	std::shared_ptr<sfg::Window> sideWindow;
 	std::shared_ptr<sfg::Box> sideBox;
 	std::shared_ptr<sfg::Button> renderButton;
-	std::shared_ptr<sfg::Entry> entry;
+	std::shared_ptr<sfg::Entry> sampleNum;
+	std::shared_ptr<sfg::Entry> imageWidth;
+	std::shared_ptr<sfg::Entry> imageHeight;
+	std::shared_ptr<sfg::Entry> gridWidth;
+	std::shared_ptr<sfg::Entry> gridHeight;
 
 	Vector2 imageCentre;
 	Vector2 imageSize;
 	float imageZoom;
 	float zoomStep = 0.1;
 
+	Vector2 gridSize = Vector2(4, 4);
+
+	int samples = 128;
+	bool rendering = false;
+	bool reload = false;
+
+	bool mouseInMain = false;
+
 	void loadScene();
 
 	void OnRenderButtonClick();
 	void BeginImageDrag();
 	void EndImageDrag();
+	void SetImageWidth();
+	void SetImageHeight();
 	void SetSamples();
+	void SetGridWidth();
+	void SetGridHeight();
+	void MouseEnterMain() { mouseInMain = true; };
+	void MouseLeaveMain() { mouseInMain = false; };
 
 	// Helper Functions
 	std::vector<std::string> listNames(std::string path, std::string fileType)
@@ -123,5 +137,12 @@ public:
 	void handleEvent(sf::Event windowEvent);
 	void update(float deltaTime);
 	void display(sf::RenderWindow &target);
+
+	int getSamples() { return samples; };
+	bool getRendering() { return rendering; };
+	bool getReload() { return reload; };
+	Vector2 getGridSize() { return gridSize; };
+
+	void stopRendering() { rendering = false; };
 };
 
