@@ -20,6 +20,7 @@ uniform vec4 bounds;
 uniform float time;
 
 uniform sampler2D envTex;
+uniform sampler2D envTexPower;
 uniform int useEnvTex;
 
 uniform float tempFact;
@@ -34,6 +35,7 @@ struct RayData
 	vec3 hit;
 	vec3 dir;
 	float t;
+	bool inside;
 };
 
 float randChange = 0;
@@ -71,7 +73,7 @@ vec3 skyColor(vec3 dir)
 		uv.x = phi / (2 * PI);
 		uv.y = 1.0 - (dir.y * 0.5 + 0.5);
 
-		return texture2D(envTex, uv).rgb;
+		return texture2D(envTex, uv).rgb;// *texture2D(envTexPower, uv).x * 100;
 	}
 
 	//return vec3(0.5);
@@ -259,32 +261,76 @@ float grayscale(vec3 color)
 // Misc Functions
 void misc_facing(in RayData ray, out vec3 outFactor)
 {
-	outFactor = vec3(clamp(dot(-ray.dir, getNormal(ray.hit)), 0.0, 1.0));
+	if (!ray.inside)
+	{
+		outFactor = vec3(clamp(dot(-ray.dir, getNormal(ray.hit)), 0.0, 1.0));
+	}
+	else
+	{
+		outFactor = vec3(clamp(dot(ray.dir, getNormal(ray.hit)), 0.0, 1.0));
+	}
+}
+
+void misc_inside(in RayData ray, out vec3 outFactor)
+{
+	if (ray.inside)
+	{
+		outFactor = vec3(1);
+	}
+	else
+	{
+		outFactor = vec3(0);
+	}
+}
+
+// Math Functions
+void math_add(in RayData ray, in vec3 x, in vec3 n, out vec3 y)
+{
+	y = n + x;
+}
+
+void math_subtract(in RayData ray, in vec3 x, in vec3 n, out vec3 y)
+{
+	y = n - x;
+}
+
+void math_multiply(in RayData ray, in vec3 x, in vec3 n, out vec3 y)
+{
+	y = n * x;
+}
+
+void math_divide(in RayData ray, in vec3 x, in vec3 n, out vec3 y)
+{
+	y = n / x;
 }
 
 // Shader Functions
-void shader_mix(in RayData ray, in vec3 inColor1, in vec3 inDir1, in vec3 inColor2, in vec3 inDir2, in vec3 inFactor, out vec3 outColor, out vec3 outDir)
+void shader_mix(in RayData ray, in vec3 inColor1, in vec3 inDir1, in vec3 inInside1, in vec3 inColor2, in vec3 inDir2, in vec3 inInside2, in vec3 inFactor, out vec3 outColor, out vec3 outDir, out vec3 outInside)
 {
-	float r = rand(ray.origin.zx + vec2(time));
-	if (r < grayscale(inFactor * channels))
+	float r = rand(ray.origin.zx);
+	if (r < clamp(grayscale(inFactor * channels), 0.0, 1.0))
 	{
 		outColor = inColor2;
 		outDir = inDir2;
+		outInside = inInside2;
 	}
 	else
 	{
 		outColor = inColor1;
 		outDir = inDir1;
+		outInside = inInside1;
 	}
-	if (grayscale(inFactor * channels) == 0)
+	if (clamp(grayscale(inFactor * channels), 0.0, 1.0) == 0)
 	{
 		outColor = inColor1;
 		outDir = inDir1;
+		outInside = inInside1;
 	}
-	else if (grayscale(inFactor * channels) == 1)
+	else if (clamp(grayscale(inFactor * channels), 0.0, 1.0) == 1)
 	{
 		outColor = inColor2;
 		outDir = inDir2;
+		outInside = inInside2;
 	}
 }
 
@@ -307,33 +353,38 @@ void shader_glossy(in RayData ray, in vec3 inColor, in vec3 inRoughness, out vec
 	// Direction
 	vec2 rs1 = ray.hit.yx;// +vec2(time);
 	vec2 rs2 = ray.hit.xz;// +vec2(time);
-	outDir = mix(randHemisphere(rs1, rs2, getNormal(ray.hit)), reflect(ray.dir, getNormal(ray.hit)), 1.0 - grayscale(inRoughness * channels));
+	outDir = mix(randHemisphere(rs1, rs2, getNormal(ray.hit)), reflect(ray.dir, getNormal(ray.hit) * -(int(ray.inside) * 2 - 1)), 1.0 - grayscale(inRoughness * channels));
 }
 
 vec3 newHit;
 vec3 newHitDir;
-void shader_refraction(inout RayData ray, in vec3 inColor, in vec3 inIOR, in vec3 inRoughness, out vec3 outColor, out vec3 outDir)
+void shader_refraction(inout RayData ray, in vec3 inColor, in vec3 inIOR, in vec3 inRoughness, out vec3 outColor, out vec3 outDir, out vec3 outInside)
 {
 	// Color
-	outColor = inColor;
+	if (ray.inside)
+	{
+		outColor = inColor;
+	}
+	else
+	{
+		outColor = vec3(1, 1, 1);
+	}
 
 	// Direction
-	vec3 dir = normalize(refract(ray.dir, getNormal(ray.hit), 1.0 / grayscale(inIOR * channels)));
-	vec2 v = march(ray.hit + getNormal(ray.hit) * -0.002, dir, -1);
+	if (!ray.inside)
+	{
+		outDir = normalize(refract(ray.dir, getNormal(ray.hit), 1.0 / grayscale(inIOR * channels)));
+		outInside = vec3(1);
+	}
+	else
+	{
+		vec3 rDir = normalize(refract(ray.dir, -getNormal(ray.hit), grayscale(inIOR * channels)));
+		vec3 dDir = randHemisphere(ray.hit.zy, ray.hit.yz, getNormal(ray.hit));
 
-	newHit = ray.hit + v.x * dir;
+		outDir = mix(dDir, rDir, 1.0 - grayscale(inRoughness * channels));
 
-	vec2 rs1 = ray.hit.zy;// +vec2(time);
-	vec2 rs2 = ray.hit.yz;// +vec2(time);
-
-	vec3 rDir = normalize(refract(dir, -getNormal(newHit), grayscale(inIOR * channels)));
-	vec3 dDir = randHemisphere(rs1, rs2, getNormal(newHit));
-
-	outDir = mix(dDir, rDir, 1.0 - grayscale(inRoughness * channels));
-
-	newHitDir = outDir;
-
-	newHit += getNormal(newHit) * 0.003;
+		outInside = vec3(0);
+	}
 }
 
 void shader_emission(in RayData ray, in vec3 inColor, in vec3 inPower, out vec3 outColor)
@@ -350,23 +401,35 @@ vec3 trace(vec3 origin, vec3 dir)
 	vec3 o = origin;
 	vec3 d = dir;
 
+	bool inside = false;
+
 	int bounces = 0;
 	while (bounces < 512)
 	{
 		bounces++;
 
-		vec2 v = march(o, d, 1);
+		vec2 v;
+		if (!inside)
+		{
+			v = march(o, d, 1);
+		}
+		else
+		{
+			v = march(o, d, -1);
+		}
 
 		RayData ray;
 		ray.origin = o;
 		ray.dir = d;
 		ray.t = v.x;
 		ray.hit = o + v.x * d;
+		ray.inside = inside;
 
 		if (ray.t < maxDist)
 		{
 			vec3 newColor = vec3(0);
 			vec3 newDir = vec3(0);
+			vec3 newInside = vec3(0);
 
 			switch (int(v.y))
 			{
@@ -380,6 +443,8 @@ vec3 trace(vec3 origin, vec3 dir)
 				ray.hit = newHit;
 			}
 
+			inside = bool(newInside.x);
+
 			if (newDir == vec3(0, 0, 0))
 			{
 				break;
@@ -387,7 +452,14 @@ vec3 trace(vec3 origin, vec3 dir)
 			else
 			{
 				d = newDir;
-				o = ray.hit + getNormal(ray.hit) * 0.001;
+				if (!inside)
+				{
+					o = ray.hit + getNormal(ray.hit) * 0.003;
+				}
+				else
+				{
+					o = ray.hit + getNormal(ray.hit) * -0.002;
+				}
 			}
 		}
 		else

@@ -45,7 +45,7 @@
 		{
 			"id": 2,
 		
-			"total_vars": 7,
+			"total_vars": 8,
 		
 			"nodes": [
 				{
@@ -83,19 +83,23 @@
 					"inputs": [
 						2,
 						3,
+						[0, 0, 0],
 						0,
 						1,
+						[0, 0, 0],
 						[0.5, 0.5, 0.5]
 					],
 					"outputs": [
 						5,
-						6
+						6,
+						7
 					]
 				}
 			],
 			
 			"color": 5,
-			"dir": 6
+			"dir": 6,
+			"inside": 7
 		},
 		{
 			"id": 3,
@@ -121,7 +125,7 @@
 		{
 			"id": 4,
 		
-			"total_vars": 7,
+			"total_vars": 11,
 		
 			"nodes": [
 				{
@@ -133,7 +137,8 @@
 					],
 					"outputs": [
 						0,
-						1
+						1,
+						2
 					]
 				},
 				{
@@ -143,8 +148,8 @@
 						[0.02, 0.02, 0.02]
 					],
 					"outputs": [
-						2,
-						3
+						3,
+						4
 					]
 				},
 				{
@@ -153,27 +158,50 @@
 						
 					],
 					"outputs": [
-						4
+						5
+					]
+				},
+				{
+					"name": "misc_inside",
+					"inputs": [
+						
+					],
+					"outputs": [
+						6
+					]
+				},
+				{
+					"name": "math_add",
+					"inputs": [
+						5,
+						6
+					],
+					"outputs": [
+						7
 					]
 				},
 				{
 					"name": "shader_mix",
 					"inputs": [
-						2,
 						3,
+						4,
+						[0, 0, 0],
 						0,
 						1,
-						4
+						2,
+						7
 					],
 					"outputs": [
-						5,
-						6
+						8,
+						9,
+						10
 					]
 				}
 			],
 			
-			"color": 5,
-			"dir": 6
+			"color": 8,
+			"dir": 9,
+			"inside": 10
 		}
 	],
 	

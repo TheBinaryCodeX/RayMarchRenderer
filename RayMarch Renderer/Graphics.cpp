@@ -87,7 +87,7 @@ GLuint Graphics::loadShader(GLenum type, std::string path)
 			for (int j = matNum - 1; j >= 0; j--)
 			{
 				lines.insert(lines.begin() + i, std::string("				break;"));
-				lines.insert(lines.begin() + i, std::string("				mat_func_") + std::to_string(j) + "(ray, newColor, newDir);");
+				lines.insert(lines.begin() + i, std::string("				mat_func_") + std::to_string(j) + "(ray, newColor, newDir, newInside);");
 				lines.insert(lines.begin() + i, std::string("			case ") + std::to_string(j) + ":");
 			}
 		}
@@ -174,12 +174,12 @@ GLuint Graphics::loadShader(GLenum type, std::string path)
 
 	//std::cout << src << std::endl;
 
-	/*
+	///*
 	for (int i = 0; i < lines.size(); i++)
 	{
 		std::cout << std::to_string(i + 1) << " " << lines[i] << std::endl;
 	}
-	*/
+	//*/
 
 	GLuint shader = glCreateShader(type);
 	glShaderSource(shader, 1, &src, NULL);
@@ -211,6 +211,7 @@ Graphics::Framebuffer lightmap;
 Graphics::Framebuffer framebuffer;
 
 GLuint envTex;
+GLuint envTexPow;
 
 GLuint fqVAO;
 void createFQ(Vector2 centre, GLfloat zoom)
@@ -265,6 +266,7 @@ void Graphics::Init()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	envTex = SOIL_load_OGL_texture("data\\textures\\skybox.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
+	envTexPow = SOIL_load_OGL_texture("data\\textures\\directional_light_power.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
 }
 
 int nextPowerOfTwo(int x) 
@@ -290,18 +292,23 @@ void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint curr
 
 	glUniform1f(glGetUniformLocation(rayTrace.program, "time"), currentTime);
 
-	glUniform1i(glGetUniformLocation(rayTrace.program, "useEnvTex"), 1);
-	glUniform1i(glGetUniformLocation(rayTrace.program, "envTex"), 0); 
+	glUniform1i(glGetUniformLocation(rayTrace.program, "useEnvTex"), 0);
+	glUniform1i(glGetUniformLocation(rayTrace.program, "envTex"), 0);
+	glUniform1i(glGetUniformLocation(rayTrace.program, "envTexPower"), 1);
 
 	glUniform1i(glGetUniformLocation(rayTrace.program, "separateChannels"), 0);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, envTex);
 
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, envTexPow);
+
 	glBindImageTexture(0, framebuffer.color, 0, false, 0, GL_READ_WRITE, GL_RGBA32F);
 
 	glDispatchCompute(nextPowerOfTwo(ceil(min.x / 8 + max.x / 8)), nextPowerOfTwo(ceil(min.y / 8 + max.y / 8)), 1);
 
+	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	glUseProgram(0);
@@ -340,8 +347,6 @@ void Graphics::Display(Vector2 centre, GLfloat zoom, Vector2 min, Vector2 max)
 
 	glUseProgram(0);
 
-	sf::Texture::bind(0);
-
 	glDisable(GL_FRAMEBUFFER_SRGB);
 }
 
@@ -352,7 +357,7 @@ void Graphics::Reload()
 	{
 		Json::Value mat = materials[i];
 
-		matLines.push_back(std::string("void mat_func_") + std::to_string(mat["id"].asInt()) + "(inout RayData ray, out vec3 outColor, out vec3 outDir)");
+		matLines.push_back(std::string("void mat_func_") + std::to_string(mat["id"].asInt()) + "(inout RayData ray, out vec3 outColor, out vec3 outDir, out vec3 outInside)");
 		matLines.push_back("{");
 
 		matLines.push_back(std::string("vec3 vars[") + mat["total_vars"].asString() + "];");
@@ -400,6 +405,14 @@ void Graphics::Reload()
 		if (mat["dir"].asInt() != -1)
 		{
 			matLines.push_back(std::string("outDir = vars[") + std::to_string(mat["dir"].asInt()) + "];");
+		}
+
+		if (!mat["inside"].isNull())
+		{
+			if (mat["inside"].asInt() != -1)
+			{
+				matLines.push_back(std::string("outInside = vars[") + std::to_string(mat["inside"].asInt()) + "];");
+			}
 		}
 
 		matLines.push_back("}");

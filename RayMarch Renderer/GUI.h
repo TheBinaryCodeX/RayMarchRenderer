@@ -1,6 +1,7 @@
 #pragma once
 #include "Screen.h"
 #include "Graphics.h"
+#include "NodeSystem.h"
 #include "json/json.h"
 #include <tinydir.h>
 #include <SFML/Window.hpp>
@@ -12,15 +13,21 @@ class GUI
 private:
 	sfg::SFGUI sfgui;
 	sfg::Desktop desktop;
-	std::shared_ptr<sfg::Window> mainWindow;
-	std::shared_ptr<sfg::Window> sideWindow;
-	std::shared_ptr<sfg::Box> sideBox;
-	std::shared_ptr<sfg::Button> renderButton;
-	std::shared_ptr<sfg::Entry> sampleNum;
-	std::shared_ptr<sfg::Entry> imageWidth;
-	std::shared_ptr<sfg::Entry> imageHeight;
-	std::shared_ptr<sfg::Entry> gridWidth;
-	std::shared_ptr<sfg::Entry> gridHeight;
+	sfg::Window::Ptr mainWindow;
+	sfg::Window::Ptr tabWindow;
+	sfg::Window::Ptr settingsWindow;
+	sfg::Box::Ptr imageSettingsBox;
+	sfg::Button::Ptr renderButton;
+	sfg::Button::Ptr imageTabButton;
+	sfg::Button::Ptr objectTabButton;
+	sfg::Button::Ptr materialTabButton;
+	sfg::Entry::Ptr sampleNum;
+	sfg::Entry::Ptr imageWidth;
+	sfg::Entry::Ptr imageHeight;
+	sfg::Entry::Ptr gridWidth;
+	sfg::Entry::Ptr gridHeight;
+
+	NodeSystem matNS;
 
 	Vector2 imageCentre;
 	Vector2 imageSize;
@@ -38,8 +45,11 @@ private:
 	void loadScene();
 
 	void OnRenderButtonClick();
-	void BeginImageDrag();
-	void EndImageDrag();
+	void SwitchTabImage();
+	void SwitchTabObject();
+	void SwitchTabMaterial();
+	void BeginDrag();
+	void EndDrag();
 	void SetImageWidth();
 	void SetImageHeight();
 	void SetSamples();

@@ -100,7 +100,7 @@ int main()
 	Graphics::setImageSize(Vector2(1280, 720));
 	Graphics::Init();
 
-	Camera camera = Camera(Vector3(0, 4, -8), Vector3(0, -4, 8).normalized(), Graphics::getImageSize().x / Graphics::getImageSize().y, PI / 4);
+	Camera camera = Camera(Vector3(-4, 4, -6), Vector3(4, -4, 6).normalized(), Graphics::getImageSize().x / Graphics::getImageSize().y, PI / 4);
 
 	int samples = 128;
 	int currentSample = 0;
@@ -123,8 +123,6 @@ int main()
 
 	bool wasRendering = false;
 	bool rendering = false;
-
-	CLI::Init(&samples, &gridWidth, &gridHeight);
 
 	double oldTime = 0;
 	double newTime = 0;
