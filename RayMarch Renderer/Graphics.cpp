@@ -97,12 +97,12 @@ GLuint Graphics::loadShader(GLenum type, std::string path)
 
 	//std::cout << src << std::endl;
 
-	/*
+	///*
 	for (int i = 0; i < lines.size(); i++)
 	{
 		std::cout << std::to_string(i + 1) << " " << lines[i] << std::endl;
 	}
-	*/
+	//*/
 
 	GLuint shader = glCreateShader(type);
 	glShaderSource(shader, 1, &src, NULL);
@@ -285,6 +285,9 @@ void Graphics::Reload()
 
 		matLines.push_back(std::string("vec3 vars[") + mat["total_vars"].asString() + "];");
 
+		int varCount = 0;
+		std::map<std::string, int> vars;
+
 		for (int j = 0; j < mat["nodes"].size(); j++)
 		{
 			std::string func;
@@ -300,7 +303,15 @@ void Graphics::Reload()
 					Json::Value input = node["inputs"][k];
 					func += "vec3(" + std::to_string(input[0].asFloat()) + ", " + std::to_string(input[1].asFloat()) + ", " + std::to_string(input[2].asFloat()) + "), ";
 				}
-				else
+				else if (node["inputs"][k].isString())
+				{
+					std::string varName = node["inputs"][k].asString();
+					if (vars.find(varName) != vars.end())
+					{
+						func += "vars[" + std::to_string(vars[varName]) + "], ";
+					}
+				}
+				else if (node["inputs"][k].isInt())
 				{
 					func += "vars[" + std::to_string(node["inputs"][k].asInt()) + "], ";
 				}
@@ -308,7 +319,25 @@ void Graphics::Reload()
 
 			for (int k = 0; k < node["outputs"].size(); k++)
 			{
-				func += "vars[" + std::to_string(node["outputs"][k].asInt()) + "]";
+				if (node["outputs"][k].isString())
+				{
+					std::string varName = node["outputs"][k].asString();
+					if (vars.find(varName) != vars.end())
+					{
+						func += "vars[" + std::to_string(vars[varName]) + "]";
+					}
+					else
+					{
+						vars[varName] = varCount;
+						func += "vars[" + std::to_string(varCount) + "]";
+						varCount++;
+					}
+				}
+				else if (node["outputs"][k].isInt())
+				{
+					func += "vars[" + std::to_string(node["outputs"][k].asInt()) + "]";
+				}
+
 				if (k < node["outputs"].size() - 1)
 				{
 					func += ", ";
@@ -320,29 +349,57 @@ void Graphics::Reload()
 			matLines.push_back(func);
 		}
 
-		if (mat["color"].asInt() != -1)
+		if (mat["color"].isString())
 		{
-			matLines.push_back(std::string("outColor = vars[") + std::to_string(mat["color"].asInt()) + "];");
+			matLines.push_back(std::string("outColor = vars[") + std::to_string(vars[mat["color"].asString()]) + "];");
+		}
+		else if (mat["color"].isInt())
+		{
+			if (mat["color"].asInt() != -1)
+			{
+				matLines.push_back(std::string("outColor = vars[") + std::to_string(mat["color"].asInt()) + "];");
+			}
 		}
 
-		if (mat["dir"].asInt() != -1)
+		if (mat["dir"].isString())
 		{
-			matLines.push_back(std::string("outDir = vars[") + std::to_string(mat["dir"].asInt()) + "];");
+			matLines.push_back(std::string("outDir = vars[") + std::to_string(vars[mat["dir"].asString()]) + "];");
+		}
+		else if (mat["dir"].isInt())
+		{
+			if (mat["dir"].asInt() != -1)
+			{
+				matLines.push_back(std::string("outDir = vars[") + std::to_string(mat["dir"].asInt()) + "];");
+			}
 		}
 
 		if (!mat["inside"].isNull())
 		{
-			if (mat["inside"].asInt() != -1)
+			if (mat["inside"].isString())
 			{
-				matLines.push_back(std::string("outInside = vars[") + std::to_string(mat["inside"].asInt()) + "];");
+				matLines.push_back(std::string("outInside = vars[") + std::to_string(vars[mat["inside"].asString()]) + "];");
+			}
+			else if (mat["inside"].isInt())
+			{
+				if (mat["inside"].asInt() != -1)
+				{
+					matLines.push_back(std::string("outInside = vars[") + std::to_string(mat["inside"].asInt()) + "];");
+				}
 			}
 		}
 
 		if (!mat["hit"].isNull())
 		{
-			if (mat["hit"].asInt() != -1)
+			if (mat["hit"].isString())
 			{
-				matLines.push_back(std::string("outHit = vars[") + std::to_string(mat["hit"].asInt()) + "];");
+				matLines.push_back(std::string("outHit = vars[") + std::to_string(vars[mat["hit"].asString()]) + "];");
+			}
+			else if (mat["hit"].isInt())
+			{
+				if (mat["hit"].asInt() != -1)
+				{
+					matLines.push_back(std::string("outHit = vars[") + std::to_string(mat["hit"].asInt()) + "];");
+				}
 			}
 		}
 

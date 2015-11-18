@@ -227,28 +227,31 @@ vec3 randHemisphere(vec2 randSeed1, vec2 randSeed2, vec3 normal)
 
 	vec3 bDir = normalize(vec3(sin(phi) * cos(theta), cos(phi), sin(phi) * sin(theta)));
 
-	if (dot(bDir, vec3(0, 0, 1)) < 0)
+	if (normal != vec3(0, 0, 0))
 	{
-		bDir *= -1;
+		if (dot(bDir, vec3(0, 0, 1)) < 0)
+		{
+			bDir *= -1;
+		}
+
+		vec3 locZ = normal;
+
+		vec3 locX;
+		if (locZ == vec3(0, 1, 0))
+		{
+			locX = normalize(cross(locZ, vec3(0, 0, 1)));
+		}
+		else
+		{
+			locX = normalize(cross(locZ, vec3(0, 1, 0)));
+		}
+
+		vec3 locY = normalize(cross(locZ, locX));
+
+		mat3 m = mat3(locX, locY, locZ);
+
+		bDir = m * bDir;
 	}
-
-	vec3 locZ = normal;
-
-	vec3 locX;
-	if (locZ == vec3(0, 1, 0))
-	{
-		locX = normalize(cross(locZ, vec3(0, 0, 1)));
-	}
-	else
-	{
-		locX = normalize(cross(locZ, vec3(0, 1, 0)));
-	}
-
-	vec3 locY = normalize(cross(locZ, locX));
-
-	mat3 m = mat3(locX, locY, locZ);
-
-	bDir = m * bDir;
 
 	return bDir;
 }
@@ -411,7 +414,7 @@ void shader_volumeScatter(inout RayData ray, in vec3 inColor, in vec3 inDensity,
 		if (hitPos != vec3(0))
 		{
 			outColor = inColor;
-			outDir = randHemisphere(hitPos.xy, hitPos.zy, -ray.dir);
+			outDir = randHemisphere(hitPos.xy, hitPos.zy, vec3(0));
 			outInside = vec3(1);
 			outHit = hitPos;
 		}
