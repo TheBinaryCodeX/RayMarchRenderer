@@ -4,20 +4,33 @@
 
 sf::RenderWindow* window;
 
-void GUI::loadScene()
+bool GUI::loadScene()
 {
 	std::vector<std::string> paths = listNames("data\\scenes\\", ".scene");
 
+	std::string path = loadPath->GetText();
+
+	if (std::find(paths.begin(), paths.end(), path) != paths.end())
+	{
+		GUI::addScene(GUI::loadJson(path));
+		return true;
+	}
+
+	return false;
+
+	/*
 	int index = 0;
 	try
 	{
 		GUI::addScene(GUI::loadJson(paths.at(index)));
+		std::cout << paths.at(index) << std::endl;
 	}
 	catch (std::out_of_range)
 	{
 		std::cout << "ERROR: Scene Index Out of Range" << std::endl;
 		return;
 	}
+	*/
 }
 
 void GUI::OnRenderButtonClick()
@@ -26,8 +39,9 @@ void GUI::OnRenderButtonClick()
 	reload = true;
 }
 
-int mainWindowMode = 0;
+//int mainWindowMode = 0;
 
+/*
 void GUI::SwitchTabImage()
 {
 	if (mainWindowMode != 0)
@@ -63,6 +77,7 @@ void GUI::SwitchTabMaterial()
 
 	mainWindowMode = 2;
 }
+*/
 
 bool dragging = false;
 Vector2 dragStart;
@@ -73,6 +88,9 @@ void GUI::BeginDrag()
 	dragging = true;
 	dragStart = Vector2(sf::Mouse::getPosition(*window).x, sf::Mouse::getPosition(*window).y);
 
+	imageStart = imageCentre;
+
+	/*
 	if (mainWindowMode == 0)
 	{
 		imageStart = imageCentre;
@@ -81,12 +99,13 @@ void GUI::BeginDrag()
 	{
 		matNS.setDragging(true);
 	}
+	*/
 }
 
 void GUI::EndDrag()
 {
 	dragging = false;
-	matNS.setDragging(false);
+	//matNS.setDragging(false);
 }
 
 void GUI::SetImageWidth()
@@ -137,6 +156,18 @@ void GUI::SetGridHeight()
 		gridSize.y = std::stoi((std::string)gridHeight->GetText());
 	}
 	catch (std::invalid_argument) {}
+}
+
+void GUI::LoadButtonClicked()
+{
+	if (loadScene())
+	{
+		std::cout << "Succesffully Loaded: " << (std::string)loadPath->GetText() << std::endl;
+	}
+	else
+	{
+		std::cout << "Failed to Load: " << (std::string)loadPath->GetText() << std::endl;
+	}
 }
 
 std::shared_ptr<sfg::Box> makeLabelInput(std::shared_ptr<sfg::Entry> inputBox, std::string labelText)
@@ -210,9 +241,21 @@ GUI::GUI(sf::RenderWindow* Window)
 	settingsWindow->SetStyle(sfg::Window::Style::BACKGROUND);
 	settingsWindow->SetAllocation(sf::FloatRect(Screen::getScreenSize().x - settingsWindow->GetAllocation().width, 0, settingsWindow->GetAllocation().width, Screen::getScreenSize().y));
 
-	// Tab Box
-	auto tabBox = sfg::Box::Create(sfg::Box::Orientation::HORIZONTAL, 2);
+	// Load Box
+	auto loadBox = sfg::Box::Create(sfg::Box::Orientation::HORIZONTAL, 0);
 
+	// Load Path
+	loadPath = sfg::Entry::Create("data\\scenes\\default.scene");
+
+	loadBox->PackEnd(loadPath);
+
+	// Load Button
+	loadButton = sfg::Button::Create("Load");
+	loadButton->GetSignal(sfg::Button::OnLeftClick).Connect(std::bind(&GUI::LoadButtonClicked, this));
+
+	loadBox->PackEnd(loadButton);
+
+	/*
 	// Image Tab Button
 	imageTabButton = sfg::Button::Create("Image");
 	imageTabButton->GetSignal(sfg::Button::OnLeftClick).Connect(std::bind(&GUI::SwitchTabImage, this));
@@ -230,14 +273,15 @@ GUI::GUI(sf::RenderWindow* Window)
 	materialTabButton->GetSignal(sfg::Button::OnLeftClick).Connect(std::bind(&GUI::SwitchTabMaterial, this));
 
 	tabBox->PackEnd(materialTabButton, false, false);
+	*/
 
-	// Tab Window
-	tabWindow = sfg::Window::Create();
-	tabWindow->SetTitle("");
-	tabWindow->Add(tabBox);
+	// Load Window
+	loadWindow = sfg::Window::Create();
+	loadWindow->SetTitle("");
+	loadWindow->Add(loadBox);
 
-	tabWindow->SetStyle(sfg::Window::Style::BACKGROUND);
-	tabWindow->SetId("tab_window");
+	loadWindow->SetStyle(sfg::Window::Style::BACKGROUND);
+	loadWindow->SetId("load_window");
 
 	// Main Window
 	mainWindow = sfg::Window::Create();
@@ -254,16 +298,16 @@ GUI::GUI(sf::RenderWindow* Window)
 
 	// Desktop
 	desktop.Add(settingsWindow);
-	desktop.Add(tabWindow);
+	desktop.Add(loadWindow);
 	desktop.Add(mainWindow);
 
-	tabWindow->SetAllocation(sf::FloatRect(0, 0, Screen::getScreenSize().x - settingsWindow->GetAllocation().width, 30));
-	mainWindow->SetAllocation(sf::FloatRect(0, tabWindow->GetAllocation().height, Screen::getScreenSize().x - settingsWindow->GetAllocation().width, Screen::getScreenSize().y - tabWindow->GetAllocation().height));
+	loadWindow->SetAllocation(sf::FloatRect(0, 0, Screen::getScreenSize().x - settingsWindow->GetAllocation().width, 30));
+	mainWindow->SetAllocation(sf::FloatRect(0, loadWindow->GetAllocation().height, Screen::getScreenSize().x - settingsWindow->GetAllocation().width, Screen::getScreenSize().y - loadWindow->GetAllocation().height));
 
 	desktop.SetProperty("Window#tab_window", "Gap", 2);
 	desktop.SetProperty("Window#main_window", "BackgroundColor", sf::Color(55, 55, 55));
 
-	matNS = NodeSystem(&desktop);
+	//matNS = NodeSystem(&desktop);
 
 	loadScene();
 }
@@ -292,6 +336,9 @@ void GUI::update(float deltaTime)
 	{
 		Vector2 mouse = Vector2(sf::Mouse::getPosition(*window).x, sf::Mouse::getPosition(*window).y);
 
+		imageCentre = imageStart + (mouse - dragStart);
+
+		/*
 		if (mainWindowMode == 0)
 		{
 			imageCentre = imageStart + (mouse - dragStart);
@@ -300,20 +347,21 @@ void GUI::update(float deltaTime)
 		{
 			matNS.setCurrentDrag(mouse - dragStart);
 		}
+		*/
 	}
 
 	desktop.Update(deltaTime);
 
-	matNS.update();
+	//matNS.update();
 }
 
 void GUI::display(sf::RenderWindow &target)
 {
 	sfgui.Display(target);
 
-	if (mainWindowMode == 0)
-	{
+	//if (mainWindowMode == 0)
+	//{
 		sf::FloatRect r = mainWindow->GetAllocation();
 		Graphics::Display(imageCentre, imageZoom, Vector2(r.left + 1, r.top + 1), Vector2(r.left + r.width - 1, r.top + r.height - 1));
-	}
+	//}
 }

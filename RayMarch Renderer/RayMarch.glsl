@@ -356,8 +356,6 @@ void shader_glossy(in RayData ray, in vec3 inColor, in vec3 inRoughness, out vec
 	outDir = mix(randHemisphere(rs1, rs2, getNormal(ray.hit)), reflect(ray.dir, getNormal(ray.hit) * -(int(ray.inside) * 2 - 1)), 1.0 - grayscale(inRoughness * channels));
 }
 
-vec3 newHit;
-vec3 newHitDir;
 void shader_refraction(inout RayData ray, in vec3 inColor, in vec3 inIOR, in vec3 inRoughness, out vec3 outColor, out vec3 outDir, out vec3 outInside)
 {
 	// Color
@@ -384,6 +382,91 @@ void shader_refraction(inout RayData ray, in vec3 inColor, in vec3 inIOR, in vec
 		outDir = mix(dDir, rDir, 1.0 - grayscale(inRoughness * channels));
 
 		outInside = vec3(0);
+	}
+}
+
+void shader_volumeScatter(inout RayData ray, in vec3 inColor, in vec3 inDensity, out vec3 outColor, out vec3 outDir, out vec3 outInside, out vec3 outHit)
+{
+	if (ray.inside)
+	{
+		float t = ray.t;
+
+		float den = 1.0 / grayscale(inDensity * channels);
+
+		int numPoints = max(int(floor(t / den)), 1);
+
+		vec3 hitPos = vec3(0);
+
+		for (int i = 0; i < numPoints; i++)
+		{
+			float r = rand(ray.hit.xy);
+			if (r < 0.5)
+			{
+				r = rand(ray.hit.zy) * t;
+				hitPos = ray.origin + ray.dir * r;
+				break;
+			}
+		}
+
+		if (hitPos != vec3(0))
+		{
+			outColor = inColor;
+			outDir = randHemisphere(hitPos.xy, hitPos.zy, -ray.dir);
+			outInside = vec3(1);
+			outHit = hitPos;
+		}
+		else
+		{
+			outColor = vec3(1, 1, 1);
+			outDir = ray.dir;
+			outInside = vec3(0);
+			outHit = vec3(0);
+		}
+
+		/*
+		float den = 1.0 / grayscale(inDensity * channels);
+
+		float t = march(ray.hit + getNormal(ray.hit) * -0.002, ray.dir, -1).x;
+
+		int numPoints = int(floor(t / den));
+
+		vec3 hitPos = vec3(0);
+
+		for (int i = 0; i < numPoints; i++)
+		{
+			float r = rand(ray.hit.xy);
+			if (r < 0.5)
+			{
+				r = rand(ray.hit.zy) * t;
+				hitPos = ray.hit + ray.dir * r;
+				break;
+			}
+		}
+
+		if (hitPos != vec3(0))
+		{
+			outColor = inColor;
+			outDir = randHemisphere(hitPos.xy, hitPos.zy, -ray.dir);
+			outInside = vec3(1);
+			outHit = hitPos;
+		}
+		else
+		{
+			outColor = vec3(1, 1, 1);
+			outDir = ray.dir;
+			outInside = vec3(0);
+
+			vec3 newHit = ray.hit + ray.dir * t;
+			outHit = newHit + getNormal(newHit) * 0.003;
+		}
+		*/
+	}
+	else
+	{
+		outColor = vec3(1, 1, 1);
+		outDir = ray.dir;
+		outInside = vec3(1);
+		outHit = vec3(0);
 	}
 }
 
@@ -430,6 +513,7 @@ vec3 trace(vec3 origin, vec3 dir)
 			vec3 newColor = vec3(0);
 			vec3 newDir = vec3(0);
 			vec3 newInside = vec3(0);
+			vec3 newHit = vec3(0);
 
 			switch (int(v.y))
 			{
@@ -437,11 +521,6 @@ vec3 trace(vec3 origin, vec3 dir)
 			}
 			
 			color *= newColor;
-
-			if (newDir == newHitDir)
-			{
-				ray.hit = newHit;
-			}
 
 			inside = bool(newInside.x);
 
@@ -452,13 +531,21 @@ vec3 trace(vec3 origin, vec3 dir)
 			else
 			{
 				d = newDir;
-				if (!inside)
+
+				if (newHit == vec3(0, 0, 0))
 				{
-					o = ray.hit + getNormal(ray.hit) * 0.003;
+					if (!inside)
+					{
+						o = ray.hit + getNormal(ray.hit) * 0.003;
+					}
+					else
+					{
+						o = ray.hit + getNormal(ray.hit) * -0.002;
+					}
 				}
 				else
 				{
-					o = ray.hit + getNormal(ray.hit) * -0.002;
+					o = newHit;
 				}
 			}
 		}

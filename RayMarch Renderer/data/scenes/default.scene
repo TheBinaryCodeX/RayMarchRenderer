@@ -104,23 +104,28 @@
 		{
 			"id": 3,
 		
-			"total_vars": 2,
+			"total_vars": 4,
 		
 			"nodes": [
 				{
-					"name": "shader_diffuse",
+					"name": "shader_volumeScatter",
 					"inputs": [
-						[0.1, 0.1, 0.8]
+						[0.5, 0.5, 0.5],
+						[2.0, 2.0, 2.0]
 					],
 					"outputs": [
 						0,
-						1
+						1,
+						2,
+						3
 					]
 				}
 			],
 			
 			"color": 0,
-			"dir": 1
+			"dir": 1,
+			"inside": 2,
+			"hit": 3
 		},
 		{
 			"id": 4,
@@ -258,7 +263,7 @@
 					"name": "map_sphere",
 					"inputs": [
 						-1,
-						[1, 0, 0],
+						[1, 0.1, 0],
 						[1, 1, 1]
 					],
 					"outputs": [

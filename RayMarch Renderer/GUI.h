@@ -14,20 +14,22 @@ private:
 	sfg::SFGUI sfgui;
 	sfg::Desktop desktop;
 	sfg::Window::Ptr mainWindow;
-	sfg::Window::Ptr tabWindow;
+	sfg::Window::Ptr loadWindow;
 	sfg::Window::Ptr settingsWindow;
 	sfg::Box::Ptr imageSettingsBox;
 	sfg::Button::Ptr renderButton;
-	sfg::Button::Ptr imageTabButton;
-	sfg::Button::Ptr objectTabButton;
-	sfg::Button::Ptr materialTabButton;
+	//sfg::Button::Ptr imageTabButton;
+	//sfg::Button::Ptr objectTabButton;
+	//sfg::Button::Ptr materialTabButton;
+	sfg::Button::Ptr loadButton;
 	sfg::Entry::Ptr sampleNum;
 	sfg::Entry::Ptr imageWidth;
 	sfg::Entry::Ptr imageHeight;
 	sfg::Entry::Ptr gridWidth;
 	sfg::Entry::Ptr gridHeight;
+	sfg::Entry::Ptr loadPath;
 
-	NodeSystem matNS;
+	//NodeSystem matNS;
 
 	Vector2 imageCentre;
 	Vector2 imageSize;
@@ -42,12 +44,12 @@ private:
 
 	bool mouseInMain = false;
 
-	void loadScene();
+	bool loadScene();
 
 	void OnRenderButtonClick();
-	void SwitchTabImage();
-	void SwitchTabObject();
-	void SwitchTabMaterial();
+	//void SwitchTabImage();
+	//void SwitchTabObject();
+	//void SwitchTabMaterial();
 	void BeginDrag();
 	void EndDrag();
 	void SetImageWidth();
@@ -55,6 +57,7 @@ private:
 	void SetSamples();
 	void SetGridWidth();
 	void SetGridHeight();
+	void LoadButtonClicked();
 	void MouseEnterMain() { mouseInMain = true; };
 	void MouseLeaveMain() { mouseInMain = false; };
 

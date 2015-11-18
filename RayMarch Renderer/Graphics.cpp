@@ -32,41 +32,11 @@ GLuint Graphics::loadShader(GLenum type, std::string path)
 
 	fileStream.close();
 
-	int maxDepth = 0;
-	std::string functionName = "";
-
 	for (int i = 0; i < lines.size(); i++)
 	{
 		line = lines[i];
 
-		if (line.find("//##") != std::string::npos)
-		{
-			lines.erase(lines.begin() + i);
-
-			functionName = lines[i].substr(lines[i].find_last_of(" ", lines[i].find("(")) + 1, lines[i].find("(") - lines[i].find_last_of(" ", lines[i].find("(")) - 1);
-
-			size_t pos = line.find("//##") + 4;
-			std::string num = line.substr(pos);
-			maxDepth = std::stoi(num);
-
-			for (int j = 0; j < maxDepth; j++)
-			{
-				auto first = lines.begin() + i;
-				auto last = first;
-
-				for (int k = i; k < lines.size(); k++)
-				{
-					if (lines[k] == "}")
-					{
-						last = lines.begin() + k + 1;
-						break;
-					}
-				}
-
-				lines.insert(lines.begin() + i, first, last);
-			}
-		}
-		else if (line.find("//#MATFUNCINSERT") != std::string::npos)
+		if (line.find("//#MATFUNCINSERT") != std::string::npos)
 		{
 			lines.erase(lines.begin() + i);
 			lines.insert(lines.begin() + i, matLines.begin(), matLines.end());
@@ -87,7 +57,7 @@ GLuint Graphics::loadShader(GLenum type, std::string path)
 			for (int j = matNum - 1; j >= 0; j--)
 			{
 				lines.insert(lines.begin() + i, std::string("				break;"));
-				lines.insert(lines.begin() + i, std::string("				mat_func_") + std::to_string(j) + "(ray, newColor, newDir, newInside);");
+				lines.insert(lines.begin() + i, std::string("				mat_func_") + std::to_string(j) + "(ray, newColor, newDir, newInside, newHit);");
 				lines.insert(lines.begin() + i, std::string("			case ") + std::to_string(j) + ":");
 			}
 		}
@@ -118,53 +88,6 @@ GLuint Graphics::loadShader(GLenum type, std::string path)
 		}
 	}
 
-	if (maxDepth != 0)
-	{
-		int id = maxDepth;
-		for (int i = 0; i < lines.size(); i++)
-		{
-			line = lines[i];
-
-			if (line.find(functionName) != std::string::npos && line.back() != ';')
-			{
-				size_t pos = line.find(functionName) + functionName.size();
-
-				lines[i].insert(pos, std::to_string(id));
-				id--;
-			}
-			else if (line.find("//#+") != std::string::npos)
-			{
-				lines.erase(lines.begin() + i);
-
-				size_t pos = line.find("//#+") + 4;
-				std::string num = line.substr(pos);
-				int sid = std::stoi(num);
-
-				if (id + sid + 1 <= maxDepth)
-				{
-					pos = lines[i].find(functionName) + functionName.size();
-					lines[i].insert(pos, std::to_string(id + sid + 1));
-				}
-				else
-				{
-					pos = lines[i].find_last_of("\t") + 1;
-					lines[i].erase(pos, lines[i].find("//#IFMAX:") + 9 - pos);
-				}
-			}
-			else if (line.find("//#") != std::string::npos)
-			{
-				lines.erase(lines.begin() + i);
-
-				size_t pos = line.find("//#") + 3;
-				std::string num = line.substr(pos);
-				int sid = std::stoi(num);
-
-				pos = lines[i].find(functionName) + functionName.size();
-				lines[i].insert(pos, std::to_string(sid));
-			}
-		}
-	}
-
 	for (int i = 0; i < lines.size(); i++)
 	{
 		content.append(lines[i] + "\n");
@@ -174,12 +97,12 @@ GLuint Graphics::loadShader(GLenum type, std::string path)
 
 	//std::cout << src << std::endl;
 
-	///*
+	/*
 	for (int i = 0; i < lines.size(); i++)
 	{
 		std::cout << std::to_string(i + 1) << " " << lines[i] << std::endl;
 	}
-	//*/
+	*/
 
 	GLuint shader = glCreateShader(type);
 	glShaderSource(shader, 1, &src, NULL);
@@ -292,7 +215,7 @@ void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint curr
 
 	glUniform1f(glGetUniformLocation(rayTrace.program, "time"), currentTime);
 
-	glUniform1i(glGetUniformLocation(rayTrace.program, "useEnvTex"), 0);
+	glUniform1i(glGetUniformLocation(rayTrace.program, "useEnvTex"), 1);
 	glUniform1i(glGetUniformLocation(rayTrace.program, "envTex"), 0);
 	glUniform1i(glGetUniformLocation(rayTrace.program, "envTexPower"), 1);
 
@@ -357,7 +280,7 @@ void Graphics::Reload()
 	{
 		Json::Value mat = materials[i];
 
-		matLines.push_back(std::string("void mat_func_") + std::to_string(mat["id"].asInt()) + "(inout RayData ray, out vec3 outColor, out vec3 outDir, out vec3 outInside)");
+		matLines.push_back(std::string("void mat_func_") + std::to_string(mat["id"].asInt()) + "(inout RayData ray, out vec3 outColor, out vec3 outDir, out vec3 outInside, out vec3 outHit)");
 		matLines.push_back("{");
 
 		matLines.push_back(std::string("vec3 vars[") + mat["total_vars"].asString() + "];");
@@ -412,6 +335,14 @@ void Graphics::Reload()
 			if (mat["inside"].asInt() != -1)
 			{
 				matLines.push_back(std::string("outInside = vars[") + std::to_string(mat["inside"].asInt()) + "];");
+			}
+		}
+
+		if (!mat["hit"].isNull())
+		{
+			if (mat["hit"].asInt() != -1)
+			{
+				matLines.push_back(std::string("outHit = vars[") + std::to_string(mat["hit"].asInt()) + "];");
 			}
 		}
 
