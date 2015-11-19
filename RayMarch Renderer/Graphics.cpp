@@ -209,6 +209,11 @@ void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint curr
 	// Compute
 	glUseProgram(rayTrace.program);
 
+	glUniform1f(glGetUniformLocation(rayTrace.program, "maxDist"), 1000.0);
+	glUniform1i(glGetUniformLocation(rayTrace.program, "maxSteps"), 512);
+	glUniform1i(glGetUniformLocation(rayTrace.program, "maxBounces"), 512);
+	glUniform1f(glGetUniformLocation(rayTrace.program, "stepMultiply"), 1.0);
+
 	glUniform1i(glGetUniformLocation(rayTrace.program, "currentSample"), currentSample);
 
 	glUniform4f(glGetUniformLocation(rayTrace.program, "bounds"), min.x, min.y, max.x, max.y);

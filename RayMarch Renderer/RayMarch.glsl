@@ -10,8 +10,10 @@ uniform vec3 ray11;
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
-const float maxDist = 1000;
-int maxSteps = 512;
+uniform float maxDist;
+uniform int maxSteps;
+uniform int maxBounces;
+uniform float stepMultiply;
 
 uniform int currentSample;
 
@@ -98,15 +100,42 @@ float smin(float a, float b, float k)
 	return mix(b, a, h) - k * h * (1.0 - h);
 }
 
+// Misc Functions
+void misc_getX(in vec3 v, out vec3 s)
+{
+	s = vec3(v.x);
+}
+
+void misc_getY(in vec3 v, out vec3 s)
+{
+	s = vec3(v.y);
+}
+
+void misc_getZ(in vec3 v, out vec3 s)
+{
+	s = vec3(v.z);
+}
+
 // Math Functions
 void math_add(in vec3 x, in vec3 n, out vec3 y)
 {
-	y = n + x;
+	y = x + n;
+}
+
+void math_subtract(in vec3 x, in vec3 n, out vec3 y)
+{
+	y = x - n;
 }
 
 void math_multiply(in vec3 x, in vec3 n, out vec3 y)
 {
-	y = n * x;
+	y = x * n;
+}
+
+
+void math_divide(in vec3 x, in vec3 n, out vec3 y)
+{
+	y = x / n;
 }
 
 void math_sine(in vec3 x, out vec3 y)
@@ -203,7 +232,7 @@ vec2 march(vec3 origin, vec3 dir, float distMult)
 			return vec2(maxDist, -1);
 		}
 
-		t += d.x;
+		t += d.x * stepMultiply;
 	}
 
 	return vec2(maxDist, -1);
@@ -394,16 +423,16 @@ void shader_volumeScatter(inout RayData ray, in vec3 inColor, in vec3 inDensity,
 	{
 		float t = ray.t;
 
-		float den = 1.0 / grayscale(inDensity * channels);
+		float den = grayscale(inDensity * channels) / 20.0;
 
-		int numPoints = max(int(floor(t / den)), 1);
+		int numPoints = int(floor(t * 100.0));
 
 		vec3 hitPos = vec3(0);
 
 		for (int i = 0; i < numPoints; i++)
 		{
 			float r = rand(ray.hit.xy);
-			if (r < 0.5)
+			if (r < den)
 			{
 				r = rand(ray.hit.zy) * t;
 				hitPos = ray.origin + ray.dir * r;
@@ -425,44 +454,6 @@ void shader_volumeScatter(inout RayData ray, in vec3 inColor, in vec3 inDensity,
 			outInside = vec3(0);
 			outHit = vec3(0);
 		}
-
-		/*
-		float den = 1.0 / grayscale(inDensity * channels);
-
-		float t = march(ray.hit + getNormal(ray.hit) * -0.002, ray.dir, -1).x;
-
-		int numPoints = int(floor(t / den));
-
-		vec3 hitPos = vec3(0);
-
-		for (int i = 0; i < numPoints; i++)
-		{
-			float r = rand(ray.hit.xy);
-			if (r < 0.5)
-			{
-				r = rand(ray.hit.zy) * t;
-				hitPos = ray.hit + ray.dir * r;
-				break;
-			}
-		}
-
-		if (hitPos != vec3(0))
-		{
-			outColor = inColor;
-			outDir = randHemisphere(hitPos.xy, hitPos.zy, -ray.dir);
-			outInside = vec3(1);
-			outHit = hitPos;
-		}
-		else
-		{
-			outColor = vec3(1, 1, 1);
-			outDir = ray.dir;
-			outInside = vec3(0);
-
-			vec3 newHit = ray.hit + ray.dir * t;
-			outHit = newHit + getNormal(newHit) * 0.003;
-		}
-		*/
 	}
 	else
 	{
@@ -490,7 +481,7 @@ vec3 trace(vec3 origin, vec3 dir)
 	bool inside = false;
 
 	int bounces = 0;
-	while (bounces < 512)
+	while (bounces < maxBounces)
 	{
 		bounces++;
 
