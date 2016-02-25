@@ -9,6 +9,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <set>
 #include "Vector.h"
 using namespace Vector;
 class Graphics

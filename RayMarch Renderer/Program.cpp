@@ -8,7 +8,6 @@
 #include "CLI.h"
 #include "GUI.h"
 #include <GL/glew.h>
-#include <GLFW/glfw3.h>
 #include <GL/gl.h>
 #include <Windows.h>
 #include <stdio.h>
@@ -97,10 +96,10 @@ int main()
 
 	renderWindow.resetGLStates();
 
-	Graphics::setImageSize(Vector2(1280, 720));
+	//Graphics::setImageSize(Vector2(1280, 720));
 	Graphics::Init();
 
-	Camera camera = Camera(Vector3(0, 4, -6), Vector3(0, -4, 6).normalized(), Graphics::getImageSize().x / Graphics::getImageSize().y, PI / 4);
+	Camera camera = Camera(Vector3(0, 4, -6), Vector3(0, -1, 2).normalized(), Graphics::getImageSize().x / Graphics::getImageSize().y, PI / 4);
 
 	int samples = 128;
 	int currentSample = 0;

@@ -190,17 +190,22 @@ GUI::GUI(sf::RenderWindow* Window)
 	renderButton->GetSignal(sfg::Button::OnLeftClick).Connect(std::bind(&GUI::OnRenderButtonClick, this));
 
 	sampleNum = sfg::Entry::Create("128");
-	sampleNum->GetSignal(sfg::Entry::OnLostFocus).Connect(std::bind(&GUI::SetSamples, this));
+	sampleNum->GetSignal(sfg::Entry::OnTextChanged).Connect(std::bind(&GUI::SetSamples, this));
+
+	SetSamples();
 
 	imageSettingsBox = sfg::Box::Create(sfg::Box::Orientation::VERTICAL, 0);
 	imageSettingsBox->PackEnd(renderButton, true, false);
 
 	// Image Size
-	imageWidth = sfg::Entry::Create("1920");
-	imageWidth->GetSignal(sfg::Entry::OnLostFocus).Connect(std::bind(&GUI::SetImageWidth, this));
+	imageWidth = sfg::Entry::Create("1024");
+	imageWidth->GetSignal(sfg::Entry::OnTextChanged).Connect(std::bind(&GUI::SetImageWidth, this));
 
-	imageHeight = sfg::Entry::Create("1080");
-	imageHeight->GetSignal(sfg::Entry::OnLostFocus).Connect(std::bind(&GUI::SetImageHeight, this));
+	imageHeight = sfg::Entry::Create("1024");
+	imageHeight->GetSignal(sfg::Entry::OnTextChanged).Connect(std::bind(&GUI::SetImageHeight, this));
+
+	SetImageWidth();
+	SetImageHeight();
 
 	auto imageSizeBox = sfg::Box::Create(sfg::Box::Orientation::VERTICAL, 0);
 	imageSizeBox->SetAllocation(sf::FloatRect(0, 0, 0, 0));
@@ -220,10 +225,13 @@ GUI::GUI(sf::RenderWindow* Window)
 
 	// Grid Size
 	gridWidth = sfg::Entry::Create("4");
-	gridWidth->GetSignal(sfg::Entry::OnLostFocus).Connect(std::bind(&GUI::SetGridWidth, this));
+	gridWidth->GetSignal(sfg::Entry::OnTextChanged).Connect(std::bind(&GUI::SetGridWidth, this));
 
 	gridHeight = sfg::Entry::Create("4");
-	gridHeight->GetSignal(sfg::Entry::OnLostFocus).Connect(std::bind(&GUI::SetGridHeight, this));
+	gridHeight->GetSignal(sfg::Entry::OnTextChanged).Connect(std::bind(&GUI::SetGridHeight, this));
+
+	SetGridWidth();
+	SetGridHeight();
 
 	auto gridSizeBox = sfg::Box::Create(sfg::Box::Orientation::VERTICAL, 0);
 	gridSizeBox->SetAllocation(sf::FloatRect(0, 0, 0, 0));
@@ -245,7 +253,7 @@ GUI::GUI(sf::RenderWindow* Window)
 	auto loadBox = sfg::Box::Create(sfg::Box::Orientation::HORIZONTAL, 0);
 
 	// Load Path
-	loadPath = sfg::Entry::Create("data\\scenes\\default.scene");
+	loadPath = sfg::Entry::Create("data\\scenes\\simple.scene");
 
 	loadBox->PackEnd(loadPath);
 

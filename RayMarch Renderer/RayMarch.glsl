@@ -44,7 +44,6 @@ float randChange = 0;
 highp float rand(vec2 co)
 {
 	co += (gl_GlobalInvocationID.xy + vec2(time)) * randChange;
-	//co += vec2(time);
 
 	highp float a = 12.9898;
 	highp float b = 78.233;
@@ -55,6 +54,25 @@ highp float rand(vec2 co)
 	randChange = fract(sin(sn) * c);
 
 	return randChange;
+}
+
+mat3 makeViewMat(vec3 dir)
+{
+	vec3 locZ = dir;
+
+	vec3 locX;
+	if (locZ == vec3(0, 1, 0))
+	{
+		locX = normalize(cross(locZ, vec3(0, 0, 1)));
+	}
+	else
+	{
+		locX = normalize(cross(locZ, vec3(0, 1, 0)));
+	}
+
+	vec3 locY = normalize(cross(locZ, locX));
+
+	return mat3(locX, locY, locZ);
 }
 
 vec3 skyColor(vec3 dir)
@@ -290,57 +308,47 @@ float grayscale(vec3 color)
 	return (color.r + color.g + color.b) / (channels.r + channels.g + channels.b);
 }
 
+//#MATUTILFUNINSERT
+
 // Misc Functions
 void misc_facing(in RayData ray, out vec3 outFactor)
 {
-	if (!ray.inside)
-	{
-		outFactor = vec3(clamp(dot(-ray.dir, getNormal(ray.hit)), 0.0, 1.0));
-	}
-	else
-	{
-		outFactor = vec3(clamp(dot(ray.dir, getNormal(ray.hit)), 0.0, 1.0));
-	}
+	outFactor = vec3(clamp(dot(ray.dir * (int(ray.inside) * 2 - 1), getNormal(ray.hit)), 0.0, 1.0));
 }
 
 void misc_inside(in RayData ray, out vec3 outFactor)
 {
-	if (ray.inside)
-	{
-		outFactor = vec3(1);
-	}
-	else
-	{
-		outFactor = vec3(0);
-	}
+	outFactor = vec3(int(ray.inside));
 }
 
 // Math Functions
 void math_add(in RayData ray, in vec3 x, in vec3 n, out vec3 y)
 {
-	y = n + x;
+	y = x + n;
 }
 
 void math_subtract(in RayData ray, in vec3 x, in vec3 n, out vec3 y)
 {
-	y = n - x;
+	y = x - n;
 }
 
 void math_multiply(in RayData ray, in vec3 x, in vec3 n, out vec3 y)
 {
-	y = n * x;
+	y = x * n;
 }
 
 void math_divide(in RayData ray, in vec3 x, in vec3 n, out vec3 y)
 {
-	y = n / x;
+	y = x / n;
 }
 
 // Shader Functions
 void shader_mix(in RayData ray, in vec3 inColor1, in vec3 inDir1, in vec3 inInside1, in vec3 inColor2, in vec3 inDir2, in vec3 inInside2, in vec3 inFactor, out vec3 outColor, out vec3 outDir, out vec3 outInside)
 {
 	float r = rand(ray.origin.zx);
-	if (r < clamp(grayscale(inFactor * channels), 0.0, 1.0))
+	float f = clamp(grayscale(inFactor * channels), 0.0, 1.0);
+
+	if (r < f)
 	{
 		outColor = inColor2;
 		outDir = inDir2;
@@ -352,13 +360,14 @@ void shader_mix(in RayData ray, in vec3 inColor1, in vec3 inDir1, in vec3 inInsi
 		outDir = inDir1;
 		outInside = inInside1;
 	}
-	if (clamp(grayscale(inFactor * channels), 0.0, 1.0) == 0)
+
+	if (f == 0)
 	{
 		outColor = inColor1;
 		outDir = inDir1;
 		outInside = inInside1;
 	}
-	else if (clamp(grayscale(inFactor * channels), 0.0, 1.0) == 1)
+	else if (f == 1)
 	{
 		outColor = inColor2;
 		outDir = inDir2;
@@ -513,7 +522,7 @@ vec3 trace(vec3 origin, vec3 dir)
 			{
 			//#CASEINSERT
 			}
-			
+
 			color *= newColor;
 
 			inside = bool(newInside.x);
@@ -555,25 +564,6 @@ vec3 trace(vec3 origin, vec3 dir)
 	return color;
 }
 
-mat3 makeViewMat(vec3 dir)
-{
-	vec3 locZ = dir;
-
-	vec3 locX;
-	if (locZ == vec3(0, 1, 0))
-	{
-		locX = normalize(cross(locZ, vec3(0, 0, 1)));
-	}
-	else
-	{
-		locX = normalize(cross(locZ, vec3(0, 1, 0)));
-	}
-
-	vec3 locY = normalize(cross(locZ, locX));
-
-	return mat3(locX, locY, locZ);
-}
-
 void main()
 {
 	ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
@@ -585,7 +575,6 @@ void main()
 	}
 
 	vec2 pos = vec2(pix) / vec2(size.x, size.y);
-	//vec3 dir = mix(mix(ray00, ray01, pos.x + 0.5 / size.x), mix(ray10, ray11, pos.x + 0.5 / size.x), pos.y + 0.5 / size.y);
 	vec3 dir = mix(mix(ray00, ray01, pos.x + rand(pix.xy + vec2(time)) / size.x), mix(ray10, ray11, pos.x + rand(pix.xy + vec2(time)) / size.x), pos.y + rand(pix.yx + vec2(time)) / size.y);
 
 	vec3 color;

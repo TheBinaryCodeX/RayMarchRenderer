@@ -99,7 +99,25 @@ private:
 
 		return paths;
 	}
-	Json::Value loadJson(std::string path)
+	void addScene(Json::Value scene)
+	{
+		Graphics::clearScene();
+		for (int i = 0; i < scene["materials"].size(); i++)
+		{
+			Graphics::addMaterial(scene["materials"][i]);
+		}
+
+		for (int i = 0; i < scene["objects"].size(); i++)
+		{
+			Graphics::addObject(scene["objects"][i]);
+		}
+	}
+
+public:
+	GUI(sf::RenderWindow* Window);
+	~GUI();
+
+	static Json::Value loadJson(std::string path)
 	{
 		std::filebuf fb;
 		if (fb.open(path, std::ios::in))
@@ -129,23 +147,6 @@ private:
 			return Json::Value();
 		}
 	}
-	void addScene(Json::Value scene)
-	{
-		Graphics::clearScene();
-		for (int i = 0; i < scene["materials"].size(); i++)
-		{
-			Graphics::addMaterial(scene["materials"][i]);
-		}
-
-		for (int i = 0; i < scene["objects"].size(); i++)
-		{
-			Graphics::addObject(scene["objects"][i]);
-		}
-	}
-
-public:
-	GUI(sf::RenderWindow* Window);
-	~GUI();
 
 	void handleEvent(sf::Event windowEvent);
 	void update(float deltaTime);

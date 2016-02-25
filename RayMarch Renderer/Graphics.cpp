@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Graphics.h"
 #include "SOIL.h"
+#include "GUI.h"
 
 Vector2 imageSize = Vector2(800, 600);
 
@@ -9,6 +10,30 @@ std::vector<Json::Value> objects;
 
 std::vector<std::string> matLines;
 std::vector<std::string> objLines;
+
+std::set<std::string> matUtilFuncNames;
+
+bool makeLines(Json::Value list, std::vector<std::string>& lines)
+{
+	std::vector<std::string> tempLines;
+
+	if (!list.isArray())
+	{
+		return false;
+	}
+
+	for (int i = 0; i < list.size(); i++)
+	{
+		if (!list[i].isString())
+		{
+			return false;
+		}
+
+		tempLines.push_back(list[i].asString());
+	}
+
+	lines = tempLines;
+}
 
 GLuint Graphics::loadShader(GLenum type, std::string path)
 {
@@ -86,6 +111,67 @@ GLuint Graphics::loadShader(GLenum type, std::string path)
 				lines.insert(lines.begin() + i, std::string("	vec3 d") + std::to_string(j) + ";");
 			}
 		}
+		/*
+		else if (line.find("//#MATUTILFUNINSERT") != std::string::npos)
+		{
+			lines.erase(lines.begin() + i);
+
+			Json::Value functions = GUI::loadJson("data\\material_functions.json");
+
+			for (auto it = matUtilFuncNames.begin(); it != matUtilFuncNames.end(); it++)
+			{
+				std::string name = *it;
+				Json::Value func;
+
+				if (name.find("shader") != std::string::npos && name == "shader_diffuse")
+				{
+					func = GUI::loadJson("data\\" + name + ".json");
+				}
+				else
+				{
+					func = functions[name];
+				}
+
+				std::cout << name << std::endl;
+
+				if (true)
+				{
+					std::vector<std::string> funcLines;
+
+					std::string defLine = "void " + name + "(in RayData ray, ";
+					
+					for (int i = 0; i < func["inputs"].size(); i++)
+					{
+						defLine += "in vec3 " + func["inputs"][i].asString();
+						if (i < func["inputs"].size() - 1)
+						{
+							defLine += ", ";
+						}
+					}
+
+					for (int i = 0; i < func["outputs"].size(); i++)
+					{
+						defLine += "out vec3 " + func["outputs"][i].asString();
+						if (i < func["outputs"].size() - 1)
+						{
+							defLine += ", ";
+						}
+						else
+						{
+							defLine += ")";
+						}
+					}
+
+					funcLines.push_back(defLine);
+					funcLines.push_back("{");
+					funcLines.push_back(func["code"].asString());
+					funcLines.push_back("}");
+
+					lines.insert(lines.begin() + i, funcLines.begin(), funcLines.end());
+				}
+			}
+		}
+		*/
 	}
 
 	for (int i = 0; i < lines.size(); i++)
@@ -220,7 +306,7 @@ void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint curr
 
 	glUniform1f(glGetUniformLocation(rayTrace.program, "time"), currentTime);
 
-	glUniform1i(glGetUniformLocation(rayTrace.program, "useEnvTex"), 1);
+	glUniform1i(glGetUniformLocation(rayTrace.program, "useEnvTex"), 0);
 	glUniform1i(glGetUniformLocation(rayTrace.program, "envTex"), 0);
 	glUniform1i(glGetUniformLocation(rayTrace.program, "envTexPower"), 1);
 
@@ -300,6 +386,8 @@ void Graphics::Reload()
 			Json::Value node = mat["nodes"][j];
 
 			func += node["name"].asString() + "(ray, ";
+
+			matUtilFuncNames.insert(node["name"].asString());
 
 			for (int k = 0; k < node["inputs"].size(); k++)
 			{

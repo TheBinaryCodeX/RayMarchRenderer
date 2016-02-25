@@ -62,6 +62,7 @@ void Camera::calculateRays()
 
 	getLocal(locX, locY, locZ);
 
+	///*
 	ray00 = dir;
 	ray00 = rotAxis(locY, -hAngle / 2, ray00, Vector3(0, 0, 0));
 	ray00 = rotAxis(locX, -vAngle / 2, ray00, Vector3(0, 0, 0));
@@ -77,6 +78,25 @@ void Camera::calculateRays()
 	ray11 = dir;
 	ray11 = rotAxis(locY, hAngle / 2, ray11, Vector3(0, 0, 0));
 	ray11 = rotAxis(locX, vAngle / 2, ray11, Vector3(0, 0, 0));
+	//*/
+	
+	/*
+	ray00 = dir;
+	ray00 = rotAxis(locY, hAngle / 2, ray00, Vector3(0, 0, 0));
+	ray00 = rotAxis(locX, vAngle / 2, ray00, Vector3(0, 0, 0));
+
+	ray10 = dir;
+	ray10 = rotAxis(locY, -hAngle / 2, ray10, Vector3(0, 0, 0));
+	ray10 = rotAxis(locX, vAngle / 2, ray10, Vector3(0, 0, 0));
+
+	ray01 = dir;
+	ray01 = rotAxis(locY, hAngle / 2, ray01, Vector3(0, 0, 0));
+	ray01 = rotAxis(locX, -vAngle / 2, ray01, Vector3(0, 0, 0));
+
+	ray11 = dir;
+	ray11 = rotAxis(locY, -hAngle / 2, ray11, Vector3(0, 0, 0));
+	ray11 = rotAxis(locX, -vAngle / 2, ray11, Vector3(0, 0, 0));
+	*/
 
 	Graphics::setView(eye, ray00, ray10, ray01, ray11);
 }
