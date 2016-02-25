@@ -1,2 +1,2 @@
 # RayMarchRenderer
-This is just something I've been working on. Feel free to look around the code.
+This is an iterative path tracer that renders distance fields through raymarching.
