@@ -1,0 +1,233 @@
+{
+	"materials": [
+		{
+			"id": 0,
+		
+			"total_vars": 1,
+		
+			"nodes": [
+				{
+					"name": "shader_emission",
+					"inputs": [
+						[1.0, 1.0, 1.0],
+						[8, 8, 8]
+					],
+					"outputs": [
+						"color"
+					]
+				}
+			],
+			
+			"color": "color",
+			"dir": -1
+		},
+		{
+			"id": 1,
+		
+			"total_vars": 2,
+		
+			"nodes": [
+				{
+					"name": "shader_diffuse",
+					"inputs": [
+						[0.8, 0.8, 0.8]
+					],
+					"outputs": [
+						"color",
+						"dir"
+					]
+				}
+			],
+			
+			"color": "color",
+			"dir": "dir"
+		},
+		{
+			"id": 2,
+		
+			"total_vars": 8,
+		
+			"nodes": [
+				{
+					"name": "shader_diffuse",
+					"inputs": [
+						[0.8, 0.8, 0.8]
+					],
+					"outputs": [
+						"diffColor",
+						"diffDir"
+					]
+				},
+				{
+					"name": "shader_glossy",
+					"inputs": [
+						[0.8, 0.8, 0.8],
+						[0.08, 0.08, 0.08]
+					],
+					"outputs": [
+						"glossColor",
+						"glossDir"
+					]
+				},
+				{
+					"name": "misc_facing",
+					"inputs": [
+						
+					],
+					"outputs": [
+						"facing"
+					]
+				},
+				{
+					"name": "shader_mix",
+					"inputs": [
+						"glossColor",
+						"glossDir",
+						[0, 0, 0],
+						"diffColor",
+						"diffDir",
+						[0, 0, 0],
+						"facing"
+					],
+					"outputs": [
+						"color",
+						"dir",
+						"inside"
+					]
+				}
+			],
+			
+			"color": "color",
+			"dir": "dir"
+		}
+	],
+	
+	"objects": [
+		{
+			"matID": 1,
+			
+			"total_vars": 1,
+			
+			"nodes": [
+				{
+					"name": "map_box",
+					"inputs": [
+						-1,
+						[0, -0.025, 0],
+						[32, 0.05, 32]
+					],
+					"outputs": [
+						0
+					]
+				}
+			],
+			
+			"distance": 0
+		},
+		{
+			"matID": 2,
+			
+			"total_vars": 1,
+			
+			"nodes": [
+				{
+					"name": "map_sphere",
+					"inputs": [
+						-1,
+						[0, 1, 0],
+						[1, 1, 1]
+					],
+					"outputs": [
+						0
+					]
+				}
+			],
+			
+			"distance": 0
+		},
+		{
+			"matID": 0,
+			
+			"total_vars": 1,
+			
+			"nodes": [
+				{
+					"name": "map_box",
+					"inputs": [
+						-1,
+						[4, 6, 0],
+						[1, 0.05, 1]
+					],
+					"outputs": [
+						0
+					]
+				}
+			],
+			
+			"distance": 0
+		},
+		{
+			"matID": 0,
+			
+			"total_vars": 1,
+			
+			"nodes": [
+				{
+					"name": "map_box",
+					"inputs": [
+						-1,
+						[-4, 6, 0],
+						[1, 0.05, 1]
+					],
+					"outputs": [
+						0
+					]
+				}
+			],
+			
+			"distance": 0
+		},
+		{
+			"matID": 0,
+			
+			"total_vars": 1,
+			
+			"nodes": [
+				{
+					"name": "map_box",
+					"inputs": [
+						-1,
+						[0, 6, 4],
+						[1, 0.05, 1]
+					],
+					"outputs": [
+						0
+					]
+				}
+			],
+			
+			"distance": 0
+		},
+		{
+			"matID": 0,
+			
+			"total_vars": 1,
+			
+			"nodes": [
+				{
+					"name": "map_box",
+					"inputs": [
+						-1,
+						[0, 6, -4],
+						[1, 0.05, 1]
+					],
+					"outputs": [
+						0
+					]
+				}
+			],
+			
+			"distance": 0
+		}
+	]
+}

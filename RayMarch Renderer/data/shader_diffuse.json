@@ -1,0 +1,14 @@
+{
+	"inputs": [
+		"inColor"
+	],
+	"outputs": [
+		"outColor", "outDir"
+	],
+		
+	"code": 
+	"
+	outColor = inColor;
+	outDir = randHemisphere(ray.hit.xy, ray.hit.zx, getNormal(ray.hit));
+	"
+}

@@ -1,0 +1,68 @@
+{
+	"misc_facing":
+	{
+		"inputs": [
+			
+		],
+		"outputs": [
+			"outFactor"
+		],
+		
+		"code": "outFactor = vec3(clamp(dot(ray.dir * (int(ray.inside) * 2 - 1), getNormal(ray.hit)), 0.0, 1.0));"
+	},
+	"misc_inside":
+	{
+		"inputs": [
+			
+		],
+		"outputs": [
+			"outFactor"
+		],
+		
+		"code": "outFactor = vec3(int(ray.inside));"
+	},
+	"math_add":
+	{
+		"inputs": [
+			"x", "n"
+		],
+		"outputs": [
+			"y"
+		],
+		
+		"code": "y = x + n"
+	},
+	"math_subtract":
+	{
+		"inputs": [
+			"x", "n"
+		],
+		"outputs": [
+			"y"
+		],
+		
+		"code": "y = x - n"
+	},
+	"math_multiply":
+	{
+		"inputs": [
+			"x", "n"
+		],
+		"outputs": [
+			"y"
+		],
+		
+		"code": "y = x * n"
+	},
+	"math_divide":
+	{
+		"inputs": [
+			"x", "n"
+		],
+		"outputs": [
+			"y"
+		],
+		
+		"code": "y = x / n"
+	}
+}
