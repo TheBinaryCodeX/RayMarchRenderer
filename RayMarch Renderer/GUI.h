@@ -1,7 +1,6 @@
 #pragma once
 #include "Screen.h"
 #include "Graphics.h"
-#include "NodeSystem.h"
 #include "json/json.h"
 #include <tinydir.h>
 #include <SFML/Window.hpp>
