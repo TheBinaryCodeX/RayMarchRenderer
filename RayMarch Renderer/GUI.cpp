@@ -189,7 +189,7 @@ GUI::GUI(sf::RenderWindow* Window)
 	renderButton = sfg::Button::Create("Render");
 	renderButton->GetSignal(sfg::Button::OnLeftClick).Connect(std::bind(&GUI::OnRenderButtonClick, this));
 
-	sampleNum = sfg::Entry::Create("128");
+	sampleNum = sfg::Entry::Create("0");
 	sampleNum->GetSignal(sfg::Entry::OnTextChanged).Connect(std::bind(&GUI::SetSamples, this));
 
 	SetSamples();

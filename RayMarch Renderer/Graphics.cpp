@@ -265,7 +265,7 @@ void Graphics::Init()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	fullQuad.Create("FullQuad");
-	rayTrace.CreateCompute("RayMarch");
+	rayTrace.CreateCompute("RayMarch2");
 
 	framebuffer.Create(imageSize);
 
@@ -274,8 +274,7 @@ void Graphics::Init()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	envTex = SOIL_load_OGL_texture("data\\textures\\skybox.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
-	envTexPow = SOIL_load_OGL_texture("data\\textures\\directional_light_power.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
+	envTex = SOIL_load_OGL_HDR_texture("data\\textures\\leafy_knoll_2k.hdr", SOIL_HDR_RGBdivA, SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
 }
 
 int nextPowerOfTwo(int x) 
@@ -306,21 +305,17 @@ void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint curr
 
 	glUniform1f(glGetUniformLocation(rayTrace.program, "time"), currentTime);
 
-	glUniform1i(glGetUniformLocation(rayTrace.program, "useEnvTex"), 0);
 	glUniform1i(glGetUniformLocation(rayTrace.program, "envTex"), 0);
-	glUniform1i(glGetUniformLocation(rayTrace.program, "envTexPower"), 1);
+	glUniform1i(glGetUniformLocation(rayTrace.program, "useEnvTex"), 0);
 
 	glUniform1i(glGetUniformLocation(rayTrace.program, "separateChannels"), 0);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, envTex);
 
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, envTexPow);
-
 	glBindImageTexture(0, framebuffer.color, 0, false, 0, GL_READ_WRITE, GL_RGBA32F);
 
-	glDispatchCompute(nextPowerOfTwo(ceil(min.x / 8 + max.x / 8)), nextPowerOfTwo(ceil(min.y / 8 + max.y / 8)), 1);
+	glDispatchCompute(nextPowerOfTwo(ceil(min.x / 16 + max.x / 16)), nextPowerOfTwo(ceil(min.y / 16 + max.y / 16)), 1);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -557,7 +552,7 @@ void Graphics::Reload()
 	}
 
 	rayTrace.DeleteCompute();
-	rayTrace.CreateCompute("RayMarch");
+	rayTrace.CreateCompute("RayMarch2");
 
 	framebuffer.Delete();
 	framebuffer.Create(imageSize);
