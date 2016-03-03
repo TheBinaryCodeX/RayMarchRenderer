@@ -118,7 +118,7 @@ int main()
 	int lastSquaresPassed = 0;
 	int distCount = 0;
 
-	bool willSave = false;
+	bool willSave = true;
 
 	bool wasRendering = false;
 	bool rendering = false;

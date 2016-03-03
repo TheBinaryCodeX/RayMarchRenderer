@@ -296,7 +296,7 @@ void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint curr
 
 	glUniform1f(glGetUniformLocation(rayTrace.program, "maxDist"), 1000.0);
 	glUniform1i(glGetUniformLocation(rayTrace.program, "maxSteps"), 512);
-	glUniform1i(glGetUniformLocation(rayTrace.program, "maxBounces"), 512);
+	glUniform1i(glGetUniformLocation(rayTrace.program, "maxBounces"), 16);
 	glUniform1f(glGetUniformLocation(rayTrace.program, "stepMultiply"), 1.0);
 
 	glUniform1i(glGetUniformLocation(rayTrace.program, "currentSample"), currentSample);
@@ -566,17 +566,17 @@ void Graphics::Reload()
 
 void Graphics::SaveImage(std::string path)
 {
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.buffer);
 
-	std::vector<unsigned char> data(Screen::getScreenSize().x * Screen::getScreenSize().y * 4);
-	glReadPixels(0, 0, Screen::getScreenSize().x, Screen::getScreenSize().y, GL_RGBA, GL_UNSIGNED_BYTE, &data[0]);
+	std::vector<unsigned char> data(imageSize.x * imageSize.y * 4);
+	glReadPixels(0, 0, imageSize.x, imageSize.y, GL_RGBA, GL_UNSIGNED_BYTE, &data[0]);
 
 	int r = SOIL_save_image
 	(
 		path.c_str(),
 		SOIL_SAVE_TYPE_BMP,
-		Screen::getScreenSize().x,
-		Screen::getScreenSize().y,
+		imageSize.x,
+		imageSize.y,
 		4,
 		data.data()
 	);

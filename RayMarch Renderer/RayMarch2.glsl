@@ -127,7 +127,15 @@ vec2 map(vec3 p)
 	vec2 d = vec2(maxDist, -1);
 
 	d = opU(d, vec2(map_box(p, vec3(0, -0.025, 0), vec3(8, 0.05, 8)), 0));
-	d = opU(d, vec2(map_sphere(p, vec3(-1, 1, 0), 1), 1));
+	d = opU(d, vec2(map_box(p, vec3(0, 16.025, 0), vec3(8, 0.05, 8)), 0));
+
+	d = opU(d, vec2(map_box(p, vec3(-8.025, 8, 0), vec3(0.05, 8, 8)), 2));
+	d = opU(d, vec2(map_box(p, vec3(8.025, 8, 0), vec3(0.05, 8, 8)), 1));
+
+	d = opU(d, vec2(map_box(p, vec3(0, 8, -8.025), vec3(8, 8, 0.05)), 0));
+	d = opU(d, vec2(map_box(p, vec3(0, 8, 8.025), vec3(8, 8, 0.05)), 3));
+
+	d = opU(d, vec2(map_sphere(p, vec3(-1, 1, 0), 1), 4));
 	d = opU(d, vec2(map_box(p, vec3(1, 1, 0), vec3(1)), 2));
 
 	return d;
@@ -170,11 +178,30 @@ vec3 getNormal(vec3 p)
 	return normalize(n);
 }
 
+mat3 makeTBN(vec3 p)
+{
+	vec3 normal = getNormal(p);
+	vec3 tangent;
+	vec3 bitangent;
+
+	if (normal.x == 0)
+	{
+		tangent = vec3(1, 0, 0);
+	}
+	else
+	{
+		tangent = normalize(cross(vec3(0, 1, 0), normal));
+	}
+
+	bitangent = normalize(cross(tangent, normal));
+
+	return mat3(bitangent, normal, tangent);
+}
+
 vec3 randHemisphere(vec2 randSeed1, vec2 randSeed2, vec3 normal)
 {
 	float theta = 2 * 3.141592653 * rand(randSeed1);
-	float phi = asin(sqrt(rand(randSeed1)));
-	//phi = acos(2 * rand(randSeed2) - 1);
+	float phi = acos(2 * rand(randSeed2) - 1);
 
 	vec3 bDir = normalize(vec3(sin(phi) * cos(theta), cos(phi), sin(phi) * sin(theta)));
 
@@ -223,10 +250,15 @@ struct DiffuseMaterial
 
 	vec3 samplePDF(vec3 wo)
 	{
-		float theta = 2 * 3.141592653 * rand(albedo.rg);
-		float phi = asin(sqrt(rand(albedo.bg)));
+		float sin2_theta = rand(albedo.rg);
+		float cos2_theta = 1.0 - sin2_theta;
 
-		return normalize(vec3(sin(phi) * cos(theta), cos(phi), sin(phi) * sin(theta)));
+		float sin_theta = sqrt(sin2_theta);
+		float cos_theta = sqrt(cos2_theta);
+
+		float o = rand(albedo.bg) * 2 * PI;
+
+		return normalize(vec3(sin_theta * cos(o), cos_theta, sin_theta * sin(o)));
 	}
 
 	vec3 weightPDF(vec3 wo)
@@ -235,31 +267,46 @@ struct DiffuseMaterial
 	}
 };
 
-vec3 brdf(vec3 wi, vec3 wo, int matID)
+struct GlossyMaterial // All the math in this struct is probably wrong
 {
-	switch (matID)
-	{
-	case 0:
-		return vec3(0.8, 0.8, 0.8) / PI;
-	case 1:
-		return vec3(0.8, 0.2, 0.2) / PI;
-	case 2:
-		return vec3(0.2, 0.2, 0.8) / PI;
-	}
-}
+	vec3 color;
+	float roughness;
 
-vec3 refl(vec3 wo, int matID)
-{
-	switch (matID)
+	vec3 brdf(vec3 wi, vec3 wo, vec3 normal)
 	{
-	case 0:
-		return vec3(0.8, 0.8, 0.8);
-	case 1:
-		return vec3(0.8, 0.2, 0.2);
-	case 2:
-		return vec3(0.2, 0.2, 0.8);
+		vec3 h = normalize(wi + wo);
+
+		float a = pow(roughness, 2);
+
+		float dt = clamp(dot(h, normal), 0.0, 1.0);
+
+		float k = a * sqrt(2.0 / PI);
+
+		float d = ((a*a) / (PI * pow(pow(dt, 2) * (a*a - 1) + 1, 2)));
+		float f = 1;// pow(1.0 - clamp(dot(h, normal), 0.0, 1.0), 5) * 0.96 + 0.04;
+		float g = (2 * clamp(dot(wo, normal), 0.0, 1.0)) / (clamp(dot(wo, normal), 0.0, 1.0) + sqrt(a*a + (1.0 - a*a) * pow(clamp(dot(wo, normal), 0.0, 1.0), 2)));// clamp(dot(wo, normal), 0.0, 1.0) / (clamp(dot(wo, normal), 0.0, 1.0) * (1.0 - k) + k);// (clamp(dot(wo, normal), 0.0, 1.0) * clamp(dot(wi, normal), 0.0, 1.0)) * pow(clamp(dot(h, wo), 0.0, 1.0), 2);
+		g *= (2 * clamp(dot(wi, normal), 0.0, 1.0)) / (clamp(dot(wi, normal), 0.0, 1.0) + sqrt(a*a + (1.0 - a*a) * pow(clamp(dot(wi, normal), 0.0, 1.0), 2)));
+		//g *= clamp(dot(wi, normal), 0.0, 1.0) / (clamp(dot(wi, normal), 0.0, 1.0) * (1.0 - k) + k);;
+
+		return color * clamp(((d * f * g) / (4 * clamp(dot(wi, normal), 0.0, 1.0) * clamp(dot(wo, normal), 0.0, 1.0))), 0.0, 1.0);
 	}
-}
+
+	vec3 samplePDF(vec3 wo, vec3 normal)
+	{
+		float o = rand(color.bg) * 2 * PI;
+
+		float a = pow(roughness, 2);
+		float r = rand(color.bg);
+		float theta = acos(sqrt((1.0f - r) / ((a*a - 1.0f) * r + 1.0f)));
+
+		return normalize(vec3(sin(theta) * cos(o), cos(theta), sin(theta) * sin(o)));
+	}
+
+	vec3 weightPDF(vec3 wo)
+	{
+		return color;
+	}
+};
 
 vec3 trace(vec3 origin, vec3 dir)
 {
@@ -282,18 +329,7 @@ vec3 trace(vec3 origin, vec3 dir)
 		{
 			vec3 point = o + v.x * d;
 			vec3 normal = getNormal(point);
-
-			vec3 lightPos = vec3(4, 6, -2);
-			float lightPower = 200.0;
-
-			vec3 lightDir = normalize(lightPos - point);
-
-			float sd = march(point + normal * 0.002, lightDir, 1).x;
-			if (sd >= length(lightPos - point))
-			{
-				endColors[nextOpen] = color * brdf(d, lightDir, int(v.y)) * clamp(dot(lightDir,  normal), 0.0, 1.0) * (lightPower / pow(length(lightPos - point), 2.0));
-				nextOpen++;
-			}
+			mat3 tbn = makeTBN(point);
 
 			DiffuseMaterial mat;
 			switch (int(v.y))
@@ -307,26 +343,82 @@ vec3 trace(vec3 origin, vec3 dir)
 			case 2:
 				mat.albedo = vec3(0.2, 0.2, 0.8);
 				break;
+			case 3:
+				mat.albedo = vec3(0.2, 0.8, 0.2);
+				break;
+			case 4:
+				mat.albedo = vec3(0.8, 0.2, 0.2);
+				break;
 			}
 
-			mat3 normMat = makeViewMat(normal);
-			vec3 newDir = mat.samplePDF(d);
-			if (dot(newDir, vec3(0, 0, 1)) < 0)
-			{
-				newDir *= -1;
-			}
-			newDir = normMat * newDir;
+			vec3 lightPos = vec3(2, 6, -2);
+			float lightPower = 50.0;
 
-			vec3 reflectance = mat.weightPDF(d);
-			float probability = max(reflectance.r, max(reflectance.g, reflectance.b));
-			if (rand(point.zx) <= probability)
+			vec3 lightDir = normalize(lightPos - point);
+
+			float f = pow(1.0 - clamp(dot(-d, normal), 0.0, 1.0), 5) * 0.96 + 0.04;
+			f = 1;
+
+			float r = rand(point.xy);
+			if (int(v.y) == 4 && r <= f)
 			{
-				color *= reflectance / probability;
+				GlossyMaterial mat2;
+				mat2.color = vec3(1);
+				mat2.roughness = 0.2;
+
+				float sd = march(point + normal * 0.002, lightDir, 1).x;
+				if (sd >= length(lightPos - point))
+				{
+					endColors[nextOpen] = color * mat2.brdf(lightDir, -d, normal) * clamp(dot(lightDir, normal), 0.0, 1.0) * (lightPower / pow(length(lightPos - point), 2.0));
+					nextOpen++;
+				}
 			}
 			else
 			{
-				color = vec3(0);
-				break;
+				float sd = march(point + normal * 0.002, lightDir, 1).x;
+				if (sd >= length(lightPos - point))
+				{
+					endColors[nextOpen] = color * mat.brdf(lightDir, -d) * clamp(dot(lightDir, normal), 0.0, 1.0) * (lightPower / pow(length(lightPos - point), 2.0));
+					nextOpen++;
+				}
+			}
+
+			vec3 newDir;
+			if (int(v.y) == 4 && r <= f)
+			{
+				GlossyMaterial mat2;
+				mat2.color = vec3(1);
+				mat2.roughness = 0.2;
+
+				newDir = tbn * mat2.samplePDF(-d, normal);
+
+				vec3 reflectance = mat2.weightPDF(-d);
+				float probability = max(reflectance.r, max(reflectance.g, reflectance.b));
+				if (rand(point.zx) <= probability)
+				{
+					color *= reflectance / probability;
+				}
+				else
+				{
+					color = vec3(0);
+					break;
+				}
+			}
+			else
+			{
+				newDir = tbn * mat.samplePDF(-d);
+
+				vec3 reflectance = mat.weightPDF(-d);
+				float probability = max(reflectance.r, max(reflectance.g, reflectance.b));
+				if (rand(point.zx) <= probability)
+				{
+					color *= reflectance / probability;
+				}
+				else
+				{
+					color = vec3(0);
+					break;
+				}
 			}
 
 			o = point + normal * 0.002;
@@ -337,6 +429,11 @@ vec3 trace(vec3 origin, vec3 dir)
 			color *= skyColor(d);
 			break;
 		}
+	}
+
+	if (bounces == maxBounces)
+	{
+		color = vec3(0);
 	}
 
 	for (int i = 0; i < nextOpen; i++)
