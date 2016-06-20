@@ -335,6 +335,207 @@ namespace Vector
 		}
 	};
 
+	class Vector4
+	{
+	public:
+		double x;
+		double y;
+		double z;
+		double w;
+
+		// Add
+
+		inline Vector4 operator+(Vector4 vector)
+		{
+			return Vector4(x + vector.x, y + vector.y, z + vector.z, w + vector.w);
+		}
+
+		inline void operator+=(Vector4 vector)
+		{
+			x += vector.x;
+			y += vector.y;
+			z += vector.z;
+			w += vector.w;
+		}
+
+		// Subtract
+
+		inline Vector4 operator-(Vector4 vector)
+		{
+			return Vector4(x - vector.x, y - vector.y, z - vector.z, w - vector.w);
+		}
+
+		inline void operator-=(Vector4 vector)
+		{
+			x -= vector.x;
+			y -= vector.y;
+			z -= vector.z;
+			w -= vector.w;
+		}
+
+		// Multiply
+
+		inline Vector4 operator*(double value)
+		{
+			return Vector4(x * value, y * value, z * value, w * value);
+		}
+
+		inline void operator*=(double value)
+		{
+			x *= value;
+			y *= value;
+			z *= value;
+			w *= value;
+		}
+
+		inline Vector4 operator*(Vector4 vector)
+		{
+			return Vector4(x * vector.x, y * vector.y, z * vector.z, w * vector.w);
+		}
+
+		inline void operator*=(Vector4 vector)
+		{
+			x *= vector.x;
+			y *= vector.y;
+			z *= vector.z;
+			w *= vector.w;
+		}
+
+		// Divide
+
+		inline Vector4 operator/(double value)
+		{
+			return Vector4(x / value, y / value, z / value, w / value);
+		}
+
+		inline void operator/=(double value)
+		{
+			x /= value;
+			y /= value;
+			z /= value;
+			w /= value;
+		}
+
+		inline Vector4 operator/(Vector4 vector)
+		{
+			return Vector4(x / vector.x, y / vector.y, z / vector.z, w / vector.w);
+		}
+
+		inline void operator/=(Vector4 vector)
+		{
+			x /= vector.x;
+			y /= vector.y;
+			z /= vector.z;
+			w /= vector.w;
+		}
+
+		// Compare
+
+		inline bool operator==(Vector4 vector)
+		{
+			if (x == vector.x && y == vector.y && z == vector.z && w == vector.w)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		inline bool operator!=(Vector4 vector)
+		{
+			if (x != vector.x || y != vector.y || z != vector.z || w != vector.w)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		// Access
+		inline double& operator[](int i)
+		{
+			if (i == 0)
+			{
+				return x;
+			}
+			else if (i == 1)
+			{
+				return y;
+			}
+			else if (i == 2)
+			{
+				return z;
+			}
+			else if (i == 3)
+			{
+				return w;
+			}
+			else
+			{
+				std::cerr << i << " is out of Vector bounds" << std::endl;
+			}
+		}
+		// End of Operators
+
+		Vector4()
+		{
+			x = 0;
+			y = 0;
+			z = 0;
+			w = 0;
+		}
+
+		Vector4(double xPos, double yPos, double zPos, double wPos)
+		{
+			x = xPos;
+			y = yPos;
+			z = zPos;
+			w = wPos;
+		}
+
+		~Vector4()
+		{
+
+		}
+
+		inline double magnitude()
+		{
+			return sqrt(x*x + y*y + z*z + w*w);
+		}
+
+		inline double dot(Vector4 vector)
+		{
+			return x * vector.x + y * vector.y + z * vector.z + w * vector.w;
+		}
+
+		inline Vector4 cross(Vector4 v1, Vector4 v2)
+		{
+			float a = (v1.x * v2.y) - (v1.y * v2.x);
+			float b = (v1.x * v2.z) - (v1.z * v2.x);
+			float c = (v1.x * v2.w) - (v1.w * v2.x);
+			float d = (v1.y * v2.z) - (v1.z * v2.y);
+			float e = (v1.y * v2.w) - (v1.w * v2.y);
+			float f = (v1.z * v2.w) - (v1.w * v2.z);
+
+			Vector4 r;
+			r.x = (y * f) - (z * e) + (w * d);
+			r.y = -(x * f) + (z * c) - (w * b);
+			r.z = (x * e) - (y * c) + (w * a);
+			r.w = -(x * d) + (y * b) - (z * a);
+
+			return r;
+		}
+
+		inline Vector4 normalized()
+		{
+			return magnitude() <= 0 ? *this : *this / magnitude();
+		}
+	};
+
 	// Print
 
 	inline std::ostream& operator<<(std::ostream& os, const Vector2& vector)
@@ -346,6 +547,12 @@ namespace Vector
 	inline std::ostream& operator<<(std::ostream& os, const Vector3& vector)
 	{
 		os << "(" << vector.x << ", " << vector.y << ", " << vector.z << ")";
+		return os;
+	}
+
+	inline std::ostream& operator<<(std::ostream& os, const Vector4& vector)
+	{
+		os << "(" << vector.x << ", " << vector.y << ", " << vector.z << ", " << vector.w << ")";
 		return os;
 	}
 }

@@ -101,6 +101,7 @@ private:
 	void addScene(Json::Value scene)
 	{
 		Graphics::clearScene();
+		std::cout << scene["materials"].size() << std::endl;
 		for (int i = 0; i < scene["materials"].size(); i++)
 		{
 			Graphics::addMaterial(scene["materials"][i]);

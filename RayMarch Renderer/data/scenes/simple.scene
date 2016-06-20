@@ -1,217 +1,47 @@
 {
 	"materials": [
 		{
-			"id": 0,
-		
-			"total_vars": 1,
-		
-			"nodes": [
-				{
-					"name": "shader_emission",
-					"inputs": [
-						[1.0, 1.0, 1.0],
-						[16, 16, 16]
-					],
-					"outputs": [
-						"color"
-					]
-				}
-			],
-			
-			"color": "color",
-			"dir": -1
-		},
-		{
 			"id": 1,
-		
-			"total_vars": 2,
-		
+			
+			"constants": [
+				[0.8, 0.2, 0.2],
+				[1.0, 1.0, 1.0],
+				0.2,
+				0.5
+			],
+			
 			"nodes": [
 				{
 					"name": "shader_diffuse",
 					"inputs": [
-						[0.8, 0.8, 0.8]
-					],
-					"outputs": [
-						"diffColor",
-						"diffDir"
+						[-1, 0]
 					]
-				}
-			],
-			
-			"color": "diffColor",
-			"dir": "diffDir"
-		},
-		{
-			"id": 2,
-		
-			"total_vars": 2,
-		
-			"nodes": [
+				},
 				{
-					"name": "shader_diffuse",
+					"name": "shader_glossy",
 					"inputs": [
-						[0.8, 0.1, 0.1]
-					],
-					"outputs": [
-						"diffColor",
-						"diffDir"
+						[-1, 1],
+						[-1, 2]
 					]
-				}
-			],
-			
-			"color": "diffColor",
-			"dir": "diffDir"
-		},
-		{
-			"id": 3,
-		
-			"total_vars": 2,
-		
-			"nodes": [
+				},
 				{
-					"name": "shader_diffuse",
+					"name": "shader_mix",
 					"inputs": [
-						[0.1, 0.1, 0.8]
-					],
-					"outputs": [
-						"diffColor",
-						"diffDir"
+						[0, 0],
+						[1, 0],
+						[3, 0]
 					]
-				}
-			],
-			
-			"color": "diffColor",
-			"dir": "diffDir"
-		},
-		{
-			"id": 4,
-		
-			"total_vars": 2,
-		
-			"nodes": [
+				},
 				{
-					"name": "shader_diffuse",
-					"inputs": [
-						[0.1, 0.8, 0.1]
-					],
-					"outputs": [
-						"diffColor",
-						"diffDir"
-					]
+					"name": "misc_fresnel"
 				}
 			],
 			
-			"color": "diffColor",
-			"dir": "diffDir"
+			"output": 2
 		}
 	],
 	
 	"objects": [
-		{
-			"matID": 1,
-			
-			"total_vars": 1,
-			
-			"nodes": [
-				{
-					"name": "map_box",
-					"inputs": [
-						-1,
-						[0, -1.025, 0],
-						[32, 0.05, 32]
-					],
-					"outputs": [
-						0
-					]
-				}
-			],
-			
-			"distance": 0
-		},
-		{
-			"matID": 2,
-			
-			"total_vars": 1,
-			
-			"nodes": [
-				{
-					"name": "map_sphere",
-					"inputs": [
-						-1,
-						[-1, 0, 0],
-						[1, 1, 1]
-					],
-					"outputs": [
-						0
-					]
-				}
-			],
-			
-			"distance": 0
-		},
-		{
-			"matID": 3,
-			
-			"total_vars": 1,
-			
-			"nodes": [
-				{
-					"name": "map_sphere",
-					"inputs": [
-						-1,
-						[1, 0, 0],
-						[1, 1, 1]
-					],
-					"outputs": [
-						0
-					]
-				}
-			],
-			
-			"distance": 0
-		},
-		{
-			"matID": 4,
-			
-			"total_vars": 1,
-			
-			"nodes": [
-				{
-					"name": "map_box",
-					"inputs": [
-						-1,
-						[0, 0, 4],
-						[1, 1, 1]
-					],
-					"outputs": [
-						0
-					]
-				}
-			],
-			
-			"distance": 0
-		},
-		{
-			"matID": 0,
-			
-			"total_vars": 1,
-			
-			"nodes": [
-				{
-					"name": "map_sphere",
-					"inputs": [
-						-1,
-						[8, 8, -4],
-						[3, 3, 3]
-					],
-					"outputs": [
-						0
-					]
-				}
-			],
-			
-			"distance": 0
-		}
+		
 	]
 }

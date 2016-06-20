@@ -3,6 +3,7 @@
 const float PI = 3.1415926535897932384626433832795;
 
 layout(binding = 0, rgba32f) uniform image2D framebuffer;
+layout(binding = 1, rgba32f) uniform image2D materialData;
 
 uniform vec3 eye;
 uniform vec3 ray00;
@@ -29,13 +30,20 @@ uniform int useEnvTex;
 uniform int separateChannels;
 vec3 channels;
 
-struct RayData
+struct PointData
 {
-	vec3 origin;
-	vec3 hit;
+	vec3 pos;
 	vec3 dir;
-	float t;
-	bool inside;
+	vec3 normal;
+	mat3 tbn;
+};
+
+struct MatData
+{
+	vec3 color;
+	vec3 newDir;
+	vec3 light;
+	bool willBreak;
 };
 
 float randChange = 0;
@@ -126,6 +134,27 @@ vec2 map(vec3 p)
 {
 	vec2 d = vec2(maxDist, -1);
 
+	//d = opU(d, vec2(map_box(p, vec3(0, -0.025, 0), vec3(32, 0.05, 32)), 0));
+
+	d = opU(d, vec2(map_sphere(p, vec3(0, 1, 0), 1), 1));
+
+	/*
+	float a = (p.y - 1.5) * PI * 0.25;
+	mat2 m = mat2(cos(a), -sin(a), sin(a), cos(a));
+	vec3 q = p;
+	q.xz = mod(q.xz, 4) - vec2(1.5);
+	q.xz = m * q.xz;
+
+	d = opU(d, vec2(map_box(q, vec3(0, 1.5, 0), vec3(0.5, 1.5, 0.5)), 1));
+
+	q = p - vec3(-2, 0, 0);
+	q.xz = mod(q.xz, 4) - vec2(1.5);
+	q.xz = m * q.xz;
+
+	d = opU(d, vec2(map_box(q, vec3(0, 1.5, 0), vec3(0.5, 1.5, 0.5)), 2));
+	*/
+
+	/*
 	d = opU(d, vec2(map_box(p, vec3(0, -0.025, 0), vec3(8, 0.05, 8)), 0));
 	d = opU(d, vec2(map_box(p, vec3(0, 16.025, 0), vec3(8, 0.05, 8)), 0));
 
@@ -137,6 +166,7 @@ vec2 map(vec3 p)
 
 	d = opU(d, vec2(map_sphere(p, vec3(-1, 1, 0), 1), 4));
 	d = opU(d, vec2(map_box(p, vec3(1, 1, 0), vec3(1)), 2));
+	*/
 
 	return d;
 }
@@ -241,77 +271,155 @@ float grayscale(vec3 color)
 
 struct DiffuseMaterial
 {
-	vec3 albedo;
-
-	vec3 brdf(vec3 wi, vec3 wo)
+	vec3 brdf(vec3 wi, vec3 wo, vec3 color)
 	{
-		return albedo / PI;
+		return color / PI;
 	}
 
 	vec3 samplePDF(vec3 wo)
 	{
-		float sin2_theta = rand(albedo.rg);
+		float sin2_theta = rand(vec2(time));
 		float cos2_theta = 1.0 - sin2_theta;
 
 		float sin_theta = sqrt(sin2_theta);
 		float cos_theta = sqrt(cos2_theta);
 
-		float o = rand(albedo.bg) * 2 * PI;
+		float o = rand(vec2(time)) * 2 * PI;
 
 		return normalize(vec3(sin_theta * cos(o), cos_theta, sin_theta * sin(o)));
 	}
 
-	vec3 weightPDF(vec3 wo)
-	{
-		return albedo;
-	}
-};
-
-struct GlossyMaterial // All the math in this struct is probably wrong
-{
-	vec3 color;
-	float roughness;
-
-	vec3 brdf(vec3 wi, vec3 wo, vec3 normal)
-	{
-		vec3 h = normalize(wi + wo);
-
-		float a = pow(roughness, 2);
-
-		float dt = clamp(dot(h, normal), 0.0, 1.0);
-
-		float k = a * sqrt(2.0 / PI);
-
-		float d = ((a*a) / (PI * pow(pow(dt, 2) * (a*a - 1) + 1, 2)));
-		float f = 1;// pow(1.0 - clamp(dot(h, normal), 0.0, 1.0), 5) * 0.96 + 0.04;
-		float g = (2 * clamp(dot(wo, normal), 0.0, 1.0)) / (clamp(dot(wo, normal), 0.0, 1.0) + sqrt(a*a + (1.0 - a*a) * pow(clamp(dot(wo, normal), 0.0, 1.0), 2)));// clamp(dot(wo, normal), 0.0, 1.0) / (clamp(dot(wo, normal), 0.0, 1.0) * (1.0 - k) + k);// (clamp(dot(wo, normal), 0.0, 1.0) * clamp(dot(wi, normal), 0.0, 1.0)) * pow(clamp(dot(h, wo), 0.0, 1.0), 2);
-		g *= (2 * clamp(dot(wi, normal), 0.0, 1.0)) / (clamp(dot(wi, normal), 0.0, 1.0) + sqrt(a*a + (1.0 - a*a) * pow(clamp(dot(wi, normal), 0.0, 1.0), 2)));
-		//g *= clamp(dot(wi, normal), 0.0, 1.0) / (clamp(dot(wi, normal), 0.0, 1.0) * (1.0 - k) + k);;
-
-		return color * clamp(((d * f * g) / (4 * clamp(dot(wi, normal), 0.0, 1.0) * clamp(dot(wo, normal), 0.0, 1.0))), 0.0, 1.0);
-	}
-
-	vec3 samplePDF(vec3 wo, vec3 normal)
-	{
-		float o = rand(color.bg) * 2 * PI;
-
-		float a = pow(roughness, 2);
-		float r = rand(color.bg);
-		float theta = acos(sqrt((1.0f - r) / ((a*a - 1.0f) * r + 1.0f)));
-
-		return normalize(vec3(sin(theta) * cos(o), cos(theta), sin(theta) * sin(o)));
-	}
-
-	vec3 weightPDF(vec3 wo)
+	vec3 weightPDF(vec3 wo, vec3 color)
 	{
 		return color;
 	}
-};
+} material_diffuse;
+
+struct GlossyMaterial // All the math in this struct is probably wrong
+{
+	vec3 brdf(vec3 wi, vec3 wo, vec3 normal, vec3 color, float roughness)
+	{
+		if (roughness == 0.0)
+		{
+			return vec3(0);
+		}
+		else
+		{
+			vec3 h = normalize(wi + wo);
+
+			float a = pow(roughness, 2);
+
+			float dt = clamp(dot(h, normal), 0.0, 1.0);
+
+			float k = a * sqrt(2.0 / PI);
+
+			float d = ((a*a) / (PI * pow(pow(dt, 2) * (a*a - 1) + 1, 2)));
+			float f = 1;// pow(1.0 - clamp(dot(h, normal), 0.0, 1.0), 5) * 0.96 + 0.04;
+			float g = (2 * clamp(dot(wo, normal), 0.0, 1.0)) / (clamp(dot(wo, normal), 0.0, 1.0) + sqrt(a*a + (1.0 - a*a) * pow(clamp(dot(wo, normal), 0.0, 1.0), 2)));// clamp(dot(wo, normal), 0.0, 1.0) / (clamp(dot(wo, normal), 0.0, 1.0) * (1.0 - k) + k);// (clamp(dot(wo, normal), 0.0, 1.0) * clamp(dot(wi, normal), 0.0, 1.0)) * pow(clamp(dot(h, wo), 0.0, 1.0), 2);
+			g *= (2 * clamp(dot(wi, normal), 0.0, 1.0)) / (clamp(dot(wi, normal), 0.0, 1.0) + sqrt(a*a + (1.0 - a*a) * pow(clamp(dot(wi, normal), 0.0, 1.0), 2)));
+			//g *= clamp(dot(wi, normal), 0.0, 1.0) / (clamp(dot(wi, normal), 0.0, 1.0) * (1.0 - k) + k);;
+
+			return color * clamp(((d * f * g) / (4 * clamp(dot(wi, normal), 0.0, 1.0) * clamp(dot(wo, normal), 0.0, 1.0))), 0.0, 1.0);
+		}
+	}
+
+	vec3 samplePDF(vec3 wo, vec3 normal, float roughness)
+	{
+		if (roughness == 0.0)
+		{
+			return reflect(wo, normal);
+		}
+		else
+		{
+			float o = rand(vec2(time)) * 2 * PI;
+
+			float a = pow(roughness, 2);
+			float r = rand(vec2(time));
+			float theta = acos(sqrt((1.0f - r) / ((a*a - 1.0f) * r + 1.0f)));
+
+			return normalize(vec3(sin(theta) * cos(o), cos(theta), sin(theta) * sin(o)));
+		}
+	}
+
+	vec3 weightPDF(vec3 wo, vec3 color)
+	{
+		return color;
+	}
+} material_glossy;
+
+/*
+void mat_func_1(in PointData point, in vec3 color, out MatData matData)
+{
+	MatData mat;
+	mat.color = color;
+	mat.light = vec3(0);
+	mat.newDir = vec3(0);
+	mat.willBreak = false;
+
+	vec3 diffColor = vec3(0.8, 0.2, 0.2);
+	vec3 glossColor = vec3(1.0, 1.0, 1.0);
+
+	float roughness = 0.00;
+
+	//float f = pow(1.0 - clamp(dot(d, normal), 0.0, 1.0), 5) * 0.96 + 0.04;
+	float f = pow(1.0 - clamp(dot(point.dir, point.normal), 0.0, 1.0), 4) * 0.96 + 0.04;
+	float r = rand(point.pos.xy);
+	r = 0.0;
+
+	/*
+	// Direct Light
+	vec3 lightPos = vec3(2, 6, -2);
+	float lightPower = 50.0;
+	vec3 lightDir = normalize(lightPos - point.pos);
+
+	float sd = march(point.pos + point.normal * 0.002, lightDir, 1).x;
+	if (sd >= length(lightPos - point.pos))
+	{
+		if (r <= f)
+		{
+			mat.light += color * material_glossy.brdf(lightDir, point.dir, point.normal, glossColor, roughness) * clamp(dot(lightDir, point.normal), 0.0, 1.0) * (lightPower / pow(length(lightPos - point.pos), 2.0));
+		}
+		else
+		{
+			mat.light += color * material_diffuse.brdf(lightDir, point.dir, diffColor) * clamp(dot(lightDir, point.normal), 0.0, 1.0) * (lightPower / pow(length(lightPos - point.pos), 2.0));
+		}
+	}
+	*
+
+	// Indirect Light
+	vec3 reflectance;
+
+	if (r <= f)
+	{
+		mat.newDir = point.tbn * material_glossy.samplePDF(point.dir, point.normal, roughness);
+		reflectance = material_glossy.weightPDF(point.dir, glossColor);
+	}
+	else
+	{
+		mat.newDir = point.tbn * material_diffuse.samplePDF(point.dir);
+		reflectance = material_diffuse.weightPDF(point.dir, diffColor);
+	}
+
+	float probability = max(reflectance.r, max(reflectance.g, reflectance.b));
+	if (rand(point.pos.zx) <= 1)
+	{
+		mat.color *= reflectance / probability;
+		mat.willBreak = false;
+	}
+	else
+	{
+		mat.willBreak = true;
+	}
+
+	matData = mat;
+}
+*/
+
+//#MATFUNCINSERT
 
 vec3 trace(vec3 origin, vec3 dir)
 {
-	vec3 endColors[64];
-	int nextOpen = 0;
+	vec3 finalColor = vec3(0);
 
 	vec3 color = vec3(1);
 
@@ -327,78 +435,41 @@ vec3 trace(vec3 origin, vec3 dir)
 
 		if (v.x < maxDist)
 		{
-			vec3 point = o + v.x * d;
-			vec3 normal = getNormal(point);
-			mat3 tbn = makeTBN(point);
+			PointData point;
+			point.pos = o + v.x * d;
+			point.dir = -d;
+			point.normal = getNormal(point.pos);
+			point.tbn = makeTBN(point.pos);
 
-			DiffuseMaterial mat;
+			vec3 matColor;
 			switch (int(v.y))
 			{
 			case 0:
-				mat.albedo = vec3(0.8, 0.8, 0.8);
+				matColor = vec3(0.8, 0.8, 0.8);
 				break;
 			case 1:
-				mat.albedo = vec3(0.8, 0.2, 0.2);
+				matColor = vec3(0.8, 0.2, 0.2);
 				break;
 			case 2:
-				mat.albedo = vec3(0.2, 0.2, 0.8);
-				break;
-			case 3:
-				mat.albedo = vec3(0.2, 0.8, 0.2);
-				break;
-			case 4:
-				mat.albedo = vec3(0.8, 0.2, 0.2);
+				matColor = vec3(0.2, 0.2, 0.8);
 				break;
 			}
 
 			vec3 lightPos = vec3(2, 6, -2);
 			float lightPower = 50.0;
-
-			vec3 lightDir = normalize(lightPos - point);
-
-			float f = pow(1.0 - clamp(dot(-d, normal), 0.0, 1.0), 5) * 0.96 + 0.04;
-			f = 1;
-
-			float r = rand(point.xy);
-			if (int(v.y) == 4 && r <= f)
-			{
-				GlossyMaterial mat2;
-				mat2.color = vec3(1);
-				mat2.roughness = 0.2;
-
-				float sd = march(point + normal * 0.002, lightDir, 1).x;
-				if (sd >= length(lightPos - point))
-				{
-					endColors[nextOpen] = color * mat2.brdf(lightDir, -d, normal) * clamp(dot(lightDir, normal), 0.0, 1.0) * (lightPower / pow(length(lightPos - point), 2.0));
-					nextOpen++;
-				}
-			}
-			else
-			{
-				float sd = march(point + normal * 0.002, lightDir, 1).x;
-				if (sd >= length(lightPos - point))
-				{
-					endColors[nextOpen] = color * mat.brdf(lightDir, -d) * clamp(dot(lightDir, normal), 0.0, 1.0) * (lightPower / pow(length(lightPos - point), 2.0));
-					nextOpen++;
-				}
-			}
+			vec3 lightDir = normalize(lightPos - point.pos);
 
 			vec3 newDir;
-			if (int(v.y) == 4 && r <= f)
+			if (int(v.y) == 1)
 			{
-				GlossyMaterial mat2;
-				mat2.color = vec3(1);
-				mat2.roughness = 0.2;
+				MatData mat;
+				mat_func_1(point, color, mat);
 
-				newDir = tbn * mat2.samplePDF(-d, normal);
+				color *= mat.color;
+				finalColor += mat.light;
+				newDir = mat.newDir;
 
-				vec3 reflectance = mat2.weightPDF(-d);
-				float probability = max(reflectance.r, max(reflectance.g, reflectance.b));
-				if (rand(point.zx) <= probability)
-				{
-					color *= reflectance / probability;
-				}
-				else
+				if (mat.willBreak)
 				{
 					color = vec3(0);
 					break;
@@ -406,11 +477,20 @@ vec3 trace(vec3 origin, vec3 dir)
 			}
 			else
 			{
-				newDir = tbn * mat.samplePDF(-d);
+				// Direct Light
+				float sd = march(point.pos + point.normal * 0.002, lightDir, 1).x;
+				if (sd >= length(lightPos - point.pos))
+				{
+					finalColor += color * material_diffuse.brdf(lightDir, point.dir, matColor) * clamp(dot(lightDir, point.normal), 0.0, 1.0) * (lightPower / pow(length(lightPos - point.pos), 2.0));
+				}
 
-				vec3 reflectance = mat.weightPDF(-d);
+
+				// Indirect Light
+				newDir = point.tbn * material_diffuse.samplePDF(point.dir);
+				vec3 reflectance = material_diffuse.weightPDF(point.dir, matColor);
+
 				float probability = max(reflectance.r, max(reflectance.g, reflectance.b));
-				if (rand(point.zx) <= probability)
+				if (rand(point.pos.zx) <= probability)
 				{
 					color *= reflectance / probability;
 				}
@@ -421,7 +501,7 @@ vec3 trace(vec3 origin, vec3 dir)
 				}
 			}
 
-			o = point + normal * 0.002;
+			o = point.pos + point.normal * 0.002;
 			d = newDir;
 		}
 		else
@@ -431,17 +511,12 @@ vec3 trace(vec3 origin, vec3 dir)
 		}
 	}
 
-	if (bounces == maxBounces)
+	if (bounces != maxBounces)
 	{
-		color = vec3(0);
+		finalColor += color;
 	}
 
-	for (int i = 0; i < nextOpen; i++)
-	{
-		color += endColors[i];
-	}
-
-	return color;
+	return finalColor;
 }
 
 void main()

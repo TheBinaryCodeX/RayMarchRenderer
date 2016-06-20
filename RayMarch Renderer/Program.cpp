@@ -75,7 +75,7 @@ void save()
 	localtime_s(&now, &t);
 
 	char buffer[80];
-	strftime(buffer, 80, "%Y-%m-%d_%H-%M", &now);
+	strftime(buffer, 80, "%Y-%m-%d_%H-%M-%S", &now);
 
 	std::string name = std::string(buffer) + ".bmp";
 
@@ -99,7 +99,7 @@ int main()
 	//Graphics::setImageSize(Vector2(1280, 720));
 	Graphics::Init();
 
-	Camera camera = Camera(Vector3(-2, 4, -6), Vector3(2, -3, 6).normalized(), Graphics::getImageSize().x / Graphics::getImageSize().y, PI / 4);
+	Camera camera = Camera(Vector3(0, 4, -6), Vector3(0, -3, 6).normalized(), Graphics::getImageSize().x / Graphics::getImageSize().y, PI / 4);
 
 	int samples = 128;
 	int currentSample = 0;
@@ -118,10 +118,16 @@ int main()
 	int lastSquaresPassed = 0;
 	int distCount = 0;
 
-	bool willSave = true;
+	bool willSave = false;
 
 	bool wasRendering = false;
 	bool rendering = false;
+
+	bool sDown = false;
+	bool wasSDown = false;
+
+	double renderStartTime = 0;
+	double renderEndTime = 0;
 
 	double oldTime = 0;
 	double newTime = 0;
@@ -139,6 +145,8 @@ int main()
 				break;
 			}
 		}
+
+		sDown = sf::Keyboard::isKeyPressed(sf::Keyboard::S);
 
 		rendering = gui.getRendering();
 
@@ -166,6 +174,9 @@ int main()
 
 			camera.setAspect(Graphics::getImageSize().x / Graphics::getImageSize().y);
 			camera.calculateRays();
+
+			renderStartTime = (double)(clock() - t) / (double)CLOCKS_PER_SEC;
+			renderEndTime = 0;
 		}
 
 		if (rendering)
@@ -177,6 +188,8 @@ int main()
 					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
 					{
 						rendering = false;
+						renderEndTime = (double)(clock() - t) / (double)CLOCKS_PER_SEC;
+						std::cout << "Render Time: " << renderEndTime - renderStartTime << std::endl;
 						gui.stopRendering();
 					}
 
@@ -228,6 +241,8 @@ int main()
 					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
 					{
 						rendering = false;
+						renderEndTime = (double)(clock() - t) / (double)CLOCKS_PER_SEC;
+						std::cout << "Render Time: " << renderEndTime - renderStartTime << std::endl;
 						gui.stopRendering();
 					}
 
@@ -277,8 +292,17 @@ int main()
 					}
 
 					rendering = false;
+					renderEndTime = (double)(clock() - t) / (double)CLOCKS_PER_SEC;
+					std::cout << "Render Time: " << renderEndTime - renderStartTime << std::endl;
 					gui.stopRendering();
 				}
+			}
+		}
+		else
+		{
+			if (sDown && !wasSDown)
+			{
+				save();
 			}
 		}
 		//*/
@@ -288,6 +312,8 @@ int main()
 		renderWindow.clear();
 		gui.display(renderWindow);
 		renderWindow.display();
+
+		wasSDown = sDown;
 
 		oldTime = newTime;
 		newTime = (double)(clock() - t) / (double)CLOCKS_PER_SEC;

@@ -104,5 +104,8 @@
     <None Include="RayMarch2.glsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="RayMarch3.glsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

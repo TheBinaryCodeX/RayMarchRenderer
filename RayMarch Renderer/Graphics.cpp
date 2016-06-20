@@ -218,6 +218,7 @@ Graphics::Shader rayTrace;
 
 Graphics::Framebuffer lightmap;
 Graphics::Framebuffer framebuffer;
+Graphics::Framebuffer materialData;
 
 GLuint envTex;
 GLuint envTexPow;
@@ -256,6 +257,9 @@ void createFQ(Vector2 centre, GLfloat zoom)
 	glBindVertexArray(0);
 }
 
+std::vector<Vector4> data;
+GLfloat aData[128 * 4];
+
 void Graphics::Init()
 {
 	glewExperimental = GL_TRUE;
@@ -265,16 +269,34 @@ void Graphics::Init()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	fullQuad.Create("FullQuad");
-	rayTrace.CreateCompute("RayMarch2");
+	rayTrace.CreateCompute("RayMarch3");
 
 	framebuffer.Create(imageSize);
+	materialData.Create(Vector2(128, 1));
 
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.buffer);
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	envTex = SOIL_load_OGL_HDR_texture("data\\textures\\leafy_knoll_2k.hdr", SOIL_HDR_RGBdivA, SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, materialData.buffer);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	envTex = SOIL_load_OGL_HDR_texture("data\\textures\\veranda_1k.hdr", SOIL_HDR_RGBdivA, SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
+
+	data.push_back(Vector4(1, 1, 1, 1));
+	data.push_back(Vector4(0, 0, 0, 0));
+	data.push_back(Vector4(0.8, 0.2, 0.2, 1.0));
+
+	for (int i = 0; i < data.size() && i < 128; i++)
+	{
+		aData[i * 4 + 0] = data[i].x;
+		aData[i * 4 + 1] = data[i].y;
+		aData[i * 4 + 2] = data[i].z;
+		aData[i * 4 + 3] = data[i].w;
+	}
 }
 
 int nextPowerOfTwo(int x) 
@@ -291,13 +313,20 @@ int nextPowerOfTwo(int x)
 
 void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint currentSample)
 {
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, materialData.color);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 1, 1, 0, GL_RGBA, GL_FLOAT, aData);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
 	// Compute
 	glUseProgram(rayTrace.program);
 
 	glUniform1f(glGetUniformLocation(rayTrace.program, "maxDist"), 1000.0);
 	glUniform1i(glGetUniformLocation(rayTrace.program, "maxSteps"), 512);
 	glUniform1i(glGetUniformLocation(rayTrace.program, "maxBounces"), 16);
-	glUniform1f(glGetUniformLocation(rayTrace.program, "stepMultiply"), 1.0);
+	glUniform1f(glGetUniformLocation(rayTrace.program, "stepMultiply"), 0.5);
 
 	glUniform1i(glGetUniformLocation(rayTrace.program, "currentSample"), currentSample);
 
@@ -314,6 +343,7 @@ void Graphics::Render(GLfloat currentTime, Vector2 min, Vector2 max, GLuint curr
 	glBindTexture(GL_TEXTURE_2D, envTex);
 
 	glBindImageTexture(0, framebuffer.color, 0, false, 0, GL_READ_WRITE, GL_RGBA32F);
+	glBindImageTexture(1, materialData.color, 0, false, 0, GL_READ_WRITE, GL_RGBA32F);
 
 	glDispatchCompute(nextPowerOfTwo(ceil(min.x / 16 + max.x / 16)), nextPowerOfTwo(ceil(min.y / 16 + max.y / 16)), 1);
 
@@ -359,8 +389,128 @@ void Graphics::Display(Vector2 centre, GLfloat zoom, Vector2 min, Vector2 max)
 	glDisable(GL_FRAMEBUFFER_SRGB);
 }
 
+std::string getInput(Json::Value material, Json::Value inputIndex)
+{
+	if (inputIndex[0].asInt() == -1)
+	{
+		Json::Value input = material["constants"][inputIndex[1].asInt()];
+		if (input.isArray())
+		{
+			return "vec3(" + input[0].asString() + ", " + input[1].asString() + ", " + input[2].asString() + ")";
+		}
+		else
+		{
+			return input.asString();
+		}
+	}
+	else
+	{
+
+	}
+}
+
+void compileNode(Json::Value material, int nodeIndex, std::string output0, std::string output1)
+{
+	Json::Value node = material["nodes"][nodeIndex];
+
+	if (node["name"] == "shader_diffuse")
+	{
+		matLines.push_back(output0 + " = point.tbn * material_diffuse.samplePDF(point.dir);");
+		matLines.push_back(output1 + " = material_diffuse.weightPDF(point.dir, " + getInput(material, node["inputs"][0]) + ");");
+	}
+	else if (node["name"] == "shader_glossy")
+	{
+		matLines.push_back(output0 + " = point.tbn * material_glossy.samplePDF(point.dir, point.normal, " + getInput(material, node["inputs"][1]) + ");");
+		matLines.push_back(output1 + " = material_glossy.weightPDF(point.dir, vec3(" + getInput(material, node["inputs"][0]) + "));");
+	}
+	else if (node["name"] == "shader_mix")
+	{
+		matLines.push_back("vec3 " + output0 + "_mixDir[2];");
+		matLines.push_back("vec3 " + output0 + "_mixRefl[2];");
+		matLines.push_back("float " + output0 + "_mixFact;");
+
+		if (node["inputs"][0][0].asInt() != -1)
+		{
+			compileNode(material, node["inputs"][0][0].asInt(), output0 + "_mixDir[0]", output0 + "_mixRefl[0]");
+		}
+
+		if (node["inputs"][1][0].asInt() != -1)
+		{
+			compileNode(material, node["inputs"][1][0].asInt(), output0 + "_mixDir[1]", output0 + "_mixRefl[1]");
+		}
+
+		if (node["inputs"][2][0].asInt() != -1)
+		{
+			compileNode(material, node["inputs"][2][0].asInt(), output0 + "_mixFact", "");
+		}
+
+		matLines.push_back("float r = rand(point.pos.xz);");
+		matLines.push_back("if (r <= " + output0 + "_mixFact)");
+		matLines.push_back("{");
+		matLines.push_back(output0 + " = " + output0 + "_mixDir[1];");
+		matLines.push_back(output1 + " = " + output0 + "_mixRefl[1];");
+		matLines.push_back("}");
+		matLines.push_back("else");
+		matLines.push_back("{");
+		matLines.push_back(output0 + " = " + output0 + "_mixDir[0];");
+		matLines.push_back(output1 + " = " + output0 + "_mixRefl[0];");
+		matLines.push_back("}");
+	}
+	else if (node["name"] == "misc_fresnel")
+	{
+		matLines.push_back(output0 + " = pow(1.0 - clamp(dot(point.normal, point.dir), 0.0, 1.0), 5) * 0.96 + 0.04;");
+	}
+}
+
+void compileNodetree(Json::Value material)
+{
+	/*
+	for (int j = 0; j < material["nodes"].size(); j++)
+	{
+		std::vector<Vector2> inputIndex;
+		for (int k = 0; k < material["nodes"][j]["inputs"].size(); k++)
+		{
+			inputIndex.push_back(Vector2(material["nodes"][j]["inputs"][k][0].asInt(), material["nodes"][j]["inputs"][k][1].asInt()));
+		}
+
+		std::vector<std::string> inputs;
+		for (int k = 0; k < inputIndex.size(); k++)
+		{
+			if (inputIndex[k].x == -1)
+			{
+				if (material["constants"][(int)inputIndex[k].y].isArray())
+				{
+					if (material["constants"][(int)inputIndex[k].y].size() == 3)
+					{
+						inputs.push_back(material["constants"][(int)inputIndex[k].y][0].asString() + ", " + material["constants"][(int)inputIndex[k].y][1].asString() + ", " + material["constants"][(int)inputIndex[k].y][2].asString());
+					}
+				}
+				else
+				{
+					inputs.push_back(material["constants"][(int)inputIndex[k].y].asString());
+				}
+			}
+		}
+
+		if (material["nodes"][j]["name"].asString() == "shader_diffuse")
+		{
+			matLines.push_back("newDir = point.tbn * material_diffuse.samplePDF(point.dir);");
+			matLines.push_back("reflectance = material_diffuse.weightPDF(point.dir, vec3(" + inputs[0] + "));");
+		}
+		else if (material["nodes"][j]["name"].asString() == "shader_glossy")
+		{
+			matLines.push_back("newDir = point.tbn * material_glossy.samplePDF(point.dir, point.normal, " + inputs[1] + ");");
+			matLines.push_back("reflectance = material_glossy.weightPDF(point.dir, vec3(" + inputs[0] + "));");
+		}
+	}
+	*/
+
+	compileNode(material, material["output"].asInt(), "newDir", "reflectance");
+}
+
 void Graphics::Reload()
 {
+	/*
 	matLines.clear();
 	for (int i = 0; i < materials.size(); i++)
 	{
@@ -550,9 +700,46 @@ void Graphics::Reload()
 
 		objLines.push_back("}");
 	}
+	*/
+
+	matLines.clear();
+	
+	for (int i = 0; i < materials.size(); i++)
+	{
+		int matID = materials[i]["id"].asInt();
+
+		matLines.push_back("void mat_func_" + std::to_string(matID) + "(in PointData point, in vec3 color, out MatData matData)");
+		matLines.push_back("{");
+		matLines.push_back("MatData mat;");
+		matLines.push_back("mat.color = color;");
+		matLines.push_back("mat.light = vec3(0);");
+		matLines.push_back("mat.newDir = vec3(0);");
+		matLines.push_back("mat.willBreak = false;");
+
+		matLines.push_back("vec3 reflectance;");
+		matLines.push_back("vec3 newDir;");
+
+		compileNodetree(materials[i]);
+
+		matLines.push_back("mat.newDir = newDir;");
+
+		matLines.push_back("float probability = max(reflectance.r, max(reflectance.g, reflectance.b));");
+		matLines.push_back("if (rand(point.pos.zx) <= 1)");
+		matLines.push_back("{");
+		matLines.push_back("	mat.color *= reflectance / probability;");
+		matLines.push_back("	mat.willBreak = false;");
+		matLines.push_back("}");
+		matLines.push_back("else");
+		matLines.push_back("{");
+		matLines.push_back("	mat.willBreak = true;");
+		matLines.push_back("}");
+
+		matLines.push_back("matData = mat;");
+		matLines.push_back("}");
+	}
 
 	rayTrace.DeleteCompute();
-	rayTrace.CreateCompute("RayMarch2");
+	rayTrace.CreateCompute("RayMarch3");
 
 	framebuffer.Delete();
 	framebuffer.Create(imageSize);
@@ -571,6 +758,33 @@ void Graphics::SaveImage(std::string path)
 	std::vector<unsigned char> data(imageSize.x * imageSize.y * 4);
 	glReadPixels(0, 0, imageSize.x, imageSize.y, GL_RGBA, GL_UNSIGNED_BYTE, &data[0]);
 
+	for (int i = 0; i < data.size() / 4; i++)
+	{
+		glm::dvec3 o = glm::dvec3((double)data[i * 4 + 0] / 255.0, (double)data[i * 4 + 1] / 255.0, (double)data[i * 4 + 2] / 255.0);
+		o = glm::clamp(o, 0.0, 1.0);
+
+		double a = 0.055;
+
+		glm::dvec3 s;
+		for (int j = 0; j < 3; j++)
+		{
+			double c = o[j];
+			if (c <= 0.0031308)
+			{
+				s[j] = 12.92 * c;
+			}
+			else
+			{
+				s[j] = (1.0 + a) * glm::pow(c, 1.0 / 2.4);
+			}
+		}
+		s = glm::clamp(s, 0.0, 1.0);
+
+		data[i * 4 + 0] = (unsigned char)(s.r * 255);
+		data[i * 4 + 1] = (unsigned char)(s.g * 255);
+		data[i * 4 + 2] = (unsigned char)(s.b * 255);
+	}
+
 	int r = SOIL_save_image
 	(
 		path.c_str(),
@@ -579,7 +793,9 @@ void Graphics::SaveImage(std::string path)
 		imageSize.y,
 		4,
 		data.data()
-	);
+		);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void Graphics::addMaterial(Json::Value material)
